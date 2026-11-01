@@ -43,7 +43,7 @@ xrayctl --host my-vps selftest                        # 每条凭证真连一次
 ```
 
 `client sync` 默认只写文件（`./dist`）：手机那条出二维码 + 单独链接文件，其它设备只进 `links.txt`。
-客户端展示名会自动带上服务器城市（首尔-mac / 首尔-phone），多台机器不会都叫 phone；`--prefix 东京` 可手动改，`--prefix ""` 关掉。
+客户端展示名按 `<地域>-<IP>-<设备名>` 生成（`首尔-43.155.171.153-phone`），多台机器不会都叫 phone；`--prefix 东京` 换地域词，`--prefix ""` 只留 IP 与设备名。
 加 `--apply` 才会接管 Clash Verge 的当前 profile（先备份），`--qr-all` 让每台设备都出二维码。
 
 **为什么不让用户自己填客户端字段**：REALITY 的那几个字段抄错任何一个，报错都是同一句

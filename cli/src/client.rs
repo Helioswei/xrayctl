@@ -58,7 +58,7 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
         Some(p) => Some(p.trim().to_string()),
         None => detect_region(t),
     };
-    // 名字里同时带地域和 IP：同一个城市可能还有别的机器，光「首尔-phone」还是分不清
+    // 命名规则：<地域>-<IP>-<设备名>（同城多台机器时靠 IP 区分）
     let disp = |email: &str| match &region {
         Some(r) => format!("{}-{}-{}", r, ip, email),
         None => format!("{}-{}", ip, email),

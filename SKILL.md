@@ -108,7 +108,7 @@ xrayctl --host my-vps client sync
 xrayctl --host my-vps client sync --apply
 ```
 
-展示名会自动带服务器城市（`首尔-phone`），多台机器才分得清；要固定名字用 `--prefix 东京`。
+展示名规则 `<地域>-<IP>-<设备名>`（`首尔-43.155.171.153-phone`），多台机器才分得清；`--prefix 东京` 可换地域词。
 
 产出：`dist/clash-profile.yaml`、`dist/links.txt`（每条凭证一条 vless 链接）、
 `dist/phone-import.txt`、`dist/qr-<客户端>.png`。
