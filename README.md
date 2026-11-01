@@ -101,3 +101,19 @@ sudo xray-traffic --accumulate      # 跨重启累计
 ## 许可
 
 MIT，见 `LICENSE`。
+
+### Xray 版本策略
+
+默认装 **26.10.31**（当前可用且在 mihomo 上实测通过），不用 `latest`：上游随时可能改握手行为，
+甚至撤版（26.10.29 已于 2026-11-01 前后被上游删除，直链 404）。
+
+| 服务端版本 | mihomo（默认配置） | mihomo + `support-x25519mlkem768: true` | xray 客户端 |
+|---|---|---|---|
+| ≤ 26.6.27 | ✅ | ✅ | ✅ |
+| 26.10.29 / 26.10.31 | ❌ `REALITY authentication failed` | ✅ | ✅ |
+
+断点在 26.7.11（`minClientVer`）与 26.9.9（强制 X25519MLKEM768）。`client sync` 生成的 Clash 配置
+自带这个 flag，所以用它接管的客户端不用管；**手写配置的人漏这一行就是这个报错**，很容易误判成服务端坏了。
+
+2026-11-01 复测方法：SSH 把服务器 443 隧道到本地，mihomo 连 `127.0.0.1`，
+带 flag → 出口 IP 正常；去掉 flag → `REALITY authentication failed`。服务端 26.10.31。
