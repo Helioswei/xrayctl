@@ -15,6 +15,8 @@ REPO="${XRAYCTL_REPO:-Helioswei/xrayctl}"
 VERSION="${XRAYCTL_VERSION:-latest}"
 PREFIX="${PREFIX:-}"        # 不给就自动选：/usr/local/bin 可写用它，否则 ~/.local/bin（免 sudo）
 BASE="${XRAYCTL_BASE:-}"   # 自建镜像/CDN 的 releases 根，如 https://cdn.example.com/xrayctl
+# 国内直连 GitHub 常常不通：直链失败后依次试这些代理前缀（XRAYCTL_MIRROR 可覆盖，空格分隔）
+MIRRORS="${XRAYCTL_MIRROR:-https://gh-proxy.com/ https://ghfast.top/}"
 REMOTE=""
 UNINSTALL=""
 
@@ -83,32 +85,70 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 echo "下载 ${asset}（${VERSION}）"
-# 正常路径：直链（公开仓开箱可用，不依赖 gh / token）。
-# 只有直链失败（私有仓、或网络被墙）才回退：先 gh，再报错并提示镜像用法。
 tag=""; [ "$VERSION" != "latest" ] && tag="$VERSION"
-if ! curl -fsSL -o "$tmp/$asset" "$base/$asset" 2>/dev/null; then
+
+# 取文件顺序：直链 → 国内镜像前缀（逐个试）→ gh（私有仓兜底）。
+# 镜像可能返回 HTTP 200 + 一段错误页，因此每个来源都必须过 SHA256SUMS 校验，不符就换下一个。
+sha_of() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}'
+  else shasum -a 256 "$1" | awk '{print $1}'; fi
+}
+
+fetch_sums() {
+  curl -fsSL --connect-timeout 8 --max-time 60 -o "$tmp/SHA256SUMS" "$base/SHA256SUMS" 2>/dev/null && return 0
+  for m in $MIRRORS; do
+    [ -z "$m" ] && continue
+    curl -fsSL --connect-timeout 8 --max-time 60 -o "$tmp/SHA256SUMS" "${m}${base}/SHA256SUMS" 2>/dev/null && return 0
+  done
+  return 1
+}
+
+fetch_sums || gh release download $tag --repo "$REPO" --pattern SHA256SUMS \
+  --output "$tmp/SHA256SUMS" --clobber 2>/dev/null || true
+
+want=""
+if [ -f "$tmp/SHA256SUMS" ]; then
+  want=$(grep " ${asset}$" "$tmp/SHA256SUMS" 2>/dev/null | awk '{print $1}' || true)
+fi
+if [ -z "$want" ]; then
+  echo "拿不到 ${asset} 的 sha256（校验清单缺失），拒绝安装" >&2
+  exit 1
+fi
+
+got_ok=""
+try_get() { # $1=来源 url  $2=来源名
+  curl -fsSL --connect-timeout 8 --max-time 180 -o "$tmp/$asset" "$1" 2>/dev/null || return 1
+  got=$(sha_of "$tmp/$asset")
+  if [ "$got" = "$want" ]; then
+    echo "  来源 ${2}：sha256 匹配"
+    got_ok="$2"
+    return 0
+  fi
+  echo "  来源 ${2}：校验不符，换下一个" >&2
+  return 1
+}
+
+try_get "$base/$asset" "直链" || {
+  for m in $MIRRORS; do
+    [ -z "$m" ] && continue
+    try_get "${m}${base}/$asset" "镜像 ${m}" && break
+  done
+}
+
+if [ -z "$got_ok" ]; then
   if { [ -n "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ] || { command -v gh >/dev/null 2>&1 && gh auth token >/dev/null 2>&1; }; } && [ -z "$BASE" ]; then
-    echo "直链失败，改用 gh 取（私有仓模式）"
+    echo "直链与镜像都失败，改用 gh 取（私有仓模式）"
     gh release download $tag --repo "$REPO" --pattern "$asset" --output "$tmp/$asset" --clobber
+    [ "$(sha_of "$tmp/$asset")" = "$want" ] || { echo "gh 取到的文件校验不符" >&2; exit 1; }
   else
     echo "下载失败：$base/$asset" >&2
-    echo "国内网络可改用镜像：" >&2
+    echo "可手动指定镜像：" >&2
+    echo "  XRAYCTL_MIRROR='https://gh-proxy.com/ ' bash install.sh" >&2
     echo "  bash install.sh --base https://<镜像前缀>/${REPO}/releases/latest/download" >&2
     exit 1
   fi
 fi
-curl -fsSL -o "$tmp/SHA256SUMS" "$base/SHA256SUMS" 2>/dev/null \
-  || gh release download $tag --repo "$REPO" --pattern SHA256SUMS --output "$tmp/SHA256SUMS" --clobber 2>/dev/null
-
-echo "校验 sha256"
-if command -v sha256sum >/dev/null 2>&1; then
-  ( cd "$tmp" && grep " ${asset}\$" SHA256SUMS | sha256sum -c - )
-else
-  want=$(grep " ${asset}\$" "$tmp/SHA256SUMS" | awk '{print $1}')
-  got=$(shasum -a 256 "$tmp/$asset" | awk '{print $1}')
-  [ "$want" = "$got" ] || { echo "sha256 不匹配：期望 $want 实际 $got"; exit 1; }
-  echo "$asset: OK"
-fi
+echo "${asset}: OK"
 
 if [ -n "$REMOTE" ]; then
   scp -q "$tmp/$asset" "$REMOTE:/tmp/xrayctl.new"

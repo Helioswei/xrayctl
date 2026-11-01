@@ -15,6 +15,7 @@ set -eu
 REPO="${XRAYCTL_REPO:-Helioswei/xrayctl}"
 VERSION="${XRAYCTL_VERSION:-latest}"
 ASSET_ROOT="${XRAYCTL_BASE:-${XRAYCTL_ASSET_ROOT:-}}"   # 自建镜像/CDN 根，如 https://cdn.example.com/xrayctl
+MIRRORS="${XRAYCTL_MIRROR:-https://gh-proxy.com/ https://ghfast.top/}"   # 国内代理前缀，直链失败时依次试
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
 arch=$(uname -m)
@@ -44,30 +45,44 @@ if [ ! -x "$BIN" ]; then
     base="https://github.com/${REPO}/releases/download/${VERSION}"
   fi
   echo "首次运行，取 ${asset}（${VERSION}）…" >&2
-  # 正常路径是直链（公开仓开箱可用）；私有仓或网络受限才回退 gh
   tag=""; [ "$VERSION" != "latest" ] && tag="$VERSION"
-  if ! curl -fsSL -o "$BIN.tmp" "$base/$asset" 2>/dev/null; then
-    if [ -z "$ASSET_ROOT" ] && { [ -n "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ] || { command -v gh >/dev/null 2>&1 && gh auth token >/dev/null 2>&1; }; }; then
-      gh release download $tag --repo "$REPO" --pattern "$asset" --output "$BIN.tmp" --clobber
-      gh release download $tag --repo "$REPO" --pattern SHA256SUMS --output "$CACHE/SHA256SUMS" --clobber 2>/dev/null || true
-    else
-      echo "下载失败：$base/$asset（国内可设 XRAYCTL_BASE 指向镜像）" >&2
-      exit 1
-    fi
+
+  sha_of() {
+    if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}'
+    else shasum -a 256 "$1" | awk '{print $1}'; fi
+  }
+
+  # 先取校验清单（直链 → 镜像 → gh）
+  if ! curl -fsSL --connect-timeout 8 --max-time 60 -o "$CACHE/SHA256SUMS" "$base/SHA256SUMS" 2>/dev/null; then
+    for m in $MIRRORS; do
+      [ -z "$m" ] && continue
+      curl -fsSL --connect-timeout 8 --max-time 60 -o "$CACHE/SHA256SUMS" "${m}${base}/SHA256SUMS" 2>/dev/null && break
+    done
   fi
-  curl -fsSL -o "$CACHE/SHA256SUMS" "$base/SHA256SUMS" 2>/dev/null || true
-  # 校验：拿不到 SHA256SUMS 就拒绝执行，宁可失败也不装来路不明的二进制
-  if [ -s "$CACHE/SHA256SUMS" ]; then
-    want=$(grep " ${asset}\$" "$CACHE/SHA256SUMS" | awk '{print $1}')
-    if command -v sha256sum >/dev/null 2>&1; then
-      got=$(sha256sum "$BIN.tmp" | awk '{print $1}')
-    else
-      got=$(shasum -a 256 "$BIN.tmp" | awk '{print $1}')
-    fi
-    [ -n "$want" ] && [ "$want" = "$got" ] || { echo "sha256 校验失败" >&2; rm -f "$BIN.tmp"; exit 1; }
-  else
-    echo "拿不到 SHA256SUMS，拒绝执行" >&2; rm -f "$BIN.tmp"; exit 1
+  if [ ! -s "$CACHE/SHA256SUMS" ] && [ -z "$ASSET_ROOT" ] && command -v gh >/dev/null 2>&1 && gh auth token >/dev/null 2>&1; then
+    gh release download $tag --repo "$REPO" --pattern SHA256SUMS --output "$CACHE/SHA256SUMS" --clobber 2>/dev/null || true
   fi
+  want=$(grep " ${asset}$" "$CACHE/SHA256SUMS" 2>/dev/null | awk '{print $1}' || true)
+  [ -z "$want" ] && { echo "拿不到 ${asset} 的 sha256，拒绝执行" >&2; exit 1; }
+
+  got_ok=""
+  try_get() { # $1=url $2=来源名
+    curl -fsSL --connect-timeout 8 --max-time 180 -o "$BIN.tmp" "$1" 2>/dev/null || return 1
+    [ "$(sha_of "$BIN.tmp")" = "$want" ] || { echo "  来源 $2：校验不符，换下一个" >&2; return 1; }
+    got_ok="$2"; return 0
+  }
+  try_get "$base/$asset" "直链" || {
+    for m in $MIRRORS; do
+      [ -z "$m" ] && continue
+      try_get "${m}${base}/$asset" "镜像 $m" && break
+    done
+  }
+  if [ -z "$got_ok" ] && [ -z "$ASSET_ROOT" ] && command -v gh >/dev/null 2>&1 && gh auth token >/dev/null 2>&1; then
+    gh release download $tag --repo "$REPO" --pattern "$asset" --output "$BIN.tmp" --clobber
+    [ "$(sha_of "$BIN.tmp")" = "$want" ] || { echo "gh 取到的文件校验不符" >&2; rm -f "$BIN.tmp"; exit 1; }
+    got_ok="gh"
+  fi
+  [ -z "$got_ok" ] && { echo "下载失败：$base/$asset（可用 XRAYCTL_MIRROR 或 XRAYCTL_BASE 指定镜像）" >&2; rm -f "$BIN.tmp"; exit 1; }
   chmod +x "$BIN.tmp" && mv "$BIN.tmp" "$BIN"
 fi
 

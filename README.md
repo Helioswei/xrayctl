@@ -11,6 +11,25 @@ curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh |
 irm https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.ps1 | iex
 ```
 
+**国内网络**（raw.githubusercontent.com 通常不通）——把镜像前缀加在完整地址前面即可：
+
+```bash
+curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash
+# Windows：
+irm https://gh-proxy.com/https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.ps1 | iex
+```
+
+镜像前缀是会失效的第三方服务（`gh-proxy.com` / `ghfast.top` 之类，任选可用的）。
+安装脚本本身也带这层回退：**二进制下载走直链失败会自动换镜像，并且每个来源都用 SHA256SUMS 校验**，
+校验不符就换下一个，不会装上来路不明的文件。
+
+连 install.sh 都取不到时，clone 下来本地跑：
+
+```bash
+git clone https://github.com/Helioswei/xrayctl.git && bash xrayctl/cli/../install.sh
+# 或者在仓库目录里直接： bash install.sh
+```
+
 **English**: [README.en.md](README.en.md)
 
 > 本地零安装也能用：`bash install.sh --remote my-vps` 只装服务器，之后 `ssh my-vps xrayctl status`。
