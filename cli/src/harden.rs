@@ -5,7 +5,7 @@ use crate::config::{ServerConf, DEFAULT_CFG};
 use crate::host::Target;
 use anyhow::{bail, Result};
 
-pub fn run(t: &Target, ssh_port: u16) -> Result<()> {
+pub fn run(t: &Target, ssh_port: u16, extra: &[u16]) -> Result<()> {
     let port = ServerConf::load(t, DEFAULT_CFG)
         .map(|c| c.port())
         .unwrap_or(Ok(443))?;
@@ -37,14 +37,18 @@ sleep 1
 {su}ufw --force default allow outgoing
 {su}ufw allow {ssh}/tcp
 {su}ufw allow {port}/tcp
-{su}ufw --force enable
+{extras}{su}ufw --force enable
 echo "--- 结果 ---"
 echo "fail2ban: $(systemctl is-active fail2ban)"
 {su}fail2ban-client status sshd | sed -n '2,6p'
 {su}ufw status | head -6"#,
         su = t.su(),
         ssh = ssh_port,
-        port = port
+        port = port,
+        extras = extra
+            .iter()
+            .map(|p| format!("{}ufw allow {}/tcp\n", t.su(), p))
+            .collect::<String>()
     );
     let out = t.run(&script)?;
     let all = format!("{}{}", out.stdout, out.stderr);
@@ -54,7 +58,10 @@ echo "fail2ban: $(systemctl is-active fail2ban)"
     }
 
     // 加固后业务必须还通：用第一条凭证回环验一次
-    let conf = ServerConf::load(t, DEFAULT_CFG)?;
+    let Ok(conf) = ServerConf::load(t, DEFAULT_CFG) else {
+        println!("\n（这台机器没有 xray 服务端配置，跳过回环自测）");
+        return Ok(());
+    };
     if let Some(c) = conf.clients().first() {
         match crate::checks::e2e(t, &conf, &c.email, 18188) {
             Ok((ip, same)) if same => println!("\n加固后连通性正常（出口 {}）", ip),

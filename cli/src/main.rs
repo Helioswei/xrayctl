@@ -141,6 +141,9 @@ enum Cmd {
         /// SSH 端口，放行用
         #[arg(long, default_value_t = 22)]
         ssh_port: u16,
+        /// 额外要放行的端口（可重复），例如对外提供网站时 --port 80
+        #[arg(long = "port")]
+        ports: Vec<u16>,
     },
     /// 把本机当客户端（默认关闭）
     Proxy {
@@ -427,7 +430,7 @@ fn real_main() -> Result<()> {
                 },
             ),
         },
-        Cmd::Harden { ssh_port } => harden::run(&target, ssh_port),
+        Cmd::Harden { ssh_port, ports } => harden::run(&target, ssh_port, &ports),
         Cmd::Proxy { sub } => match sub {
             ProxyCmd::Install { email, from, socks, http } => {
                 let src = match &from {
