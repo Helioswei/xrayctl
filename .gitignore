@@ -1,0 +1,4 @@
+cli/target/
+*.log
+.DS_Store
+dist/

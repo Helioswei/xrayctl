@@ -1,0 +1,142 @@
+name: release
+
+# 打 tag（v*）出全平台二进制；PR/push 只跑测试。
+# 产物：linux-x86_64(musl) / linux-aarch64(musl) / darwin-x86_64 / darwin-aarch64 / windows-x86_64
+on:
+  push:
+    tags: ["v*"]
+    branches: ["main"]
+    # 只改文档/配置不跑 CI，省得白排队（之前连推三次就排了三个队）
+    paths-ignore:
+      - "**.md"
+      - "clash-profile.yaml"
+      - "dist/**"
+  pull_request:
+  workflow_dispatch:
+
+# 新 push 自动取消同一分支上还在排队的旧运行；tag 构建不取消（发布要完整跑完）
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --manifest-path cli/Cargo.toml --verbose
+      - run: cargo build --release --manifest-path cli/Cargo.toml
+
+  # 先建 Release，避免 5 个矩阵任务并发抢建同一个 release
+  prepare:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 建 Release（已存在就跳过）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1 \
+            || gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" \
+                 --title "${GITHUB_REF_NAME}" --generate-notes
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            asset: vpsctl-linux-x86_64
+            apt: musl-tools
+            linker: ""
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            asset: vpsctl-linux-aarch64
+            apt: gcc-aarch64-linux-gnu musl-tools
+            linker: aarch64-linux-gnu-gcc
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            asset: vpsctl-darwin-x86_64
+            apt: ""
+            linker: ""
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            asset: vpsctl-darwin-aarch64
+            apt: ""
+            linker: ""
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            asset: vpsctl-windows-x86_64.exe
+            apt: ""
+            linker: ""
+    runs-on: ${{ matrix.os }}
+    # 私有仓的默认 GITHUB_TOKEN 是只读，上传 Release 资产必须显式要 contents:write，
+    # 否则编译全过、最后一步 403 Resource not accessible by integration。
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: 安装交叉工具链（Linux 目标）
+        if: matrix.apt != ''
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ${{ matrix.apt }}
+
+      - name: 编译
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: ${{ matrix.linker }}
+        run: cargo build --release --manifest-path cli/Cargo.toml --target ${{ matrix.target }}
+
+      - name: 产物改名
+        shell: bash
+        run: |
+          set -e
+          case "${{ matrix.target }}" in
+            *windows*) BIN="vpsctl.exe" ;;
+            *)         BIN="vpsctl" ;;
+          esac
+          cp "cli/target/${{ matrix.target }}/release/${BIN}" "${{ matrix.asset }}"
+          ls -lh "${{ matrix.asset }}"
+
+      # 直接挂到 Release：私有仓 Actions artifact 存储有配额（2026-10-31 实测 quota 爆掉）
+      - name: 上传到 Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" "${{ matrix.asset }}" --clobber --repo "${GITHUB_REPOSITORY}"
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 从 Release 拉回全部产物（不用 artifact 存储）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist && cd dist
+          gh release download "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --clobber
+          ls -lh
+
+      - name: 生成校验文件
+        run: |
+          cd dist
+          rm -f SHA256SUMS
+          sha256sum vpsctl-* > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: 上传校验文件
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" dist/SHA256SUMS --clobber --repo "${GITHUB_REPOSITORY}"

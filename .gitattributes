@@ -1,0 +1,11 @@
+# 跨平台：脚本必须 LF，否则 Windows 检出后 bash 报错
+*.sh text eol=lf
+*.py text eol=lf
+*.rs text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.exe binary
+*.png binary
+*.apk binary
