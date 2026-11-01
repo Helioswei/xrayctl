@@ -38,7 +38,7 @@ cd xrayctl && bash install.sh
 
 ```bash
 xrayctl --host my-vps deploy --clients laptop,phone   # 装 xray + 生成密钥 + 写配置 + systemd
-xrayctl --host my-vps client sync --qr                # 渲染 Clash 配置 + 全部链接 + 手机二维码
+xrayctl --host my-vps client sync                # 渲染 Clash 配置 + 全部链接 + 每台设备一张二维码
 xrayctl --host my-vps selftest                        # 每条凭证真连一次，回显出口 IP
 ```
 
@@ -57,7 +57,7 @@ xrayctl [--host <ssh别名> | --local] [--no-sudo] <子命令>
 | 命令 | 作用 |
 |---|---|
 | `deploy` | 从零部署：装 xray（固定版本）→ 生成密钥 → 渲染配置 → `xray -test` → systemd 单元 → 起服务 |
-| `client sync` | 读服务端现状，生成 Clash profile / 全部 vless 链接 / 手机二维码；`--apply` 写入 Clash Verge |
+| `client sync` | 读服务端现状，生成 Clash profile / 每条凭证的 vless 链接与二维码；`--apply` 写入 Clash Verge |
 | `selftest` | 逐条凭证回环真连一次，打印出口 IP |
 | `doctor` | 全面体检：二进制、配置、服务、端口、端到端回环 |
 | `status` | 服务状态、监听、客户端列表、运行时长 |

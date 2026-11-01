@@ -82,8 +82,9 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
     self_check(&clash, main, &ip, &pubkey, &main_sid)?;
     println!("✓ {}", clash_path.display());
 
-    // 2) 全部客户端链接
+    // 2) 每条凭证一条链接；每条链接配一张二维码（几个客户端就几张，默认全出）
     let mut links = String::new();
+    let mut phone_link: Option<String> = None;
     for (i, c) in clients.iter().enumerate() {
         let sid = sids.get(i).cloned().unwrap_or_default();
         let conn = Conn {
@@ -95,39 +96,31 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
             sni: sni.clone(),
             flow: c.flow.clone(),
         };
-        links.push_str(&conn.vless_link(&c.email));
+        let link = conn.vless_link(&c.email);
+        links.push_str(&link);
         links.push('\n');
+
+        if c.email == "phone" {
+            phone_link = Some(link.clone());
+        }
+
+        if o.qr {
+            let png = out.join(format!("qr-{}.png", safe_name(&c.email)));
+            match make_qr(&link, &png) {
+                Ok(_) => println!("✓ {}", png.display()),
+                Err(e) => println!("· {} 的二维码跳过：{}", c.email, e),
+            }
+        }
     }
     let links_path = out.join("links.txt");
     std::fs::write(&links_path, &links)?;
     println!("✓ {}", links_path.display());
 
-    // 3) 手机那条
-    if let Some(phone) = clients.iter().find(|c| c.email == "phone") {
-        let sid = sid_for(&clients, &sids, &phone.email)?;
-        let conn = Conn {
-            host: ip.clone(),
-            port,
-            id: phone.id.clone(),
-            public_key: pubkey.clone(),
-            short_id: sid.clone(),
-            sni: sni.clone(),
-            flow: phone.flow.clone(),
-        };
-        let link = conn.vless_link("phone");
+    // 3) 手机那条单独一份，方便直接复制粘贴
+    if let Some(link) = &phone_link {
         let p = out.join("phone-import.txt");
-        std::fs::write(&p, &link)?;
+        std::fs::write(&p, link)?;
         println!("✓ {}", p.display());
-
-        if o.qr {
-            let png = out.join("phone-qr.png");
-            match make_qr(&link, &png) {
-                Ok(_) => println!("✓ {}", png.display()),
-                Err(e) => println!("· 二维码跳过：{}", e),
-            }
-        } else {
-            println!("· 要手机二维码：加 --qr（xrayctl client sync --qr）");
-        }
     }
 
     // 4) 写进 Clash Verge —— 必须显式 --apply。默认只落盘，绝不动用户正在用的配置。
@@ -333,6 +326,14 @@ fn now_stamp() -> String {
         .map(|d| d.as_secs())
         .unwrap_or(0);
     format!("{}", secs)
+}
+
+/// 邮箱 → 文件名：只保留安全字符
+fn safe_name(email: &str) -> String {
+    email
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '-' })
+        .collect()
 }
 
 fn slug(s: &str) -> String {

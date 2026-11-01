@@ -102,14 +102,14 @@ xrayctl --host my-vps harden --ssh-port 22   # 主机侧：fail2ban + ufw
 
 ```bash
 # 生成 Clash 配置（默认只写 ./dist，不动你正在用的配置）
-xrayctl --host my-vps client sync --qr
+xrayctl --host my-vps client sync
 
 # 要它接管 Clash Verge 当前 profile（先自动备份）
 xrayctl --host my-vps client sync --apply
 ```
 
 产出：`dist/clash-profile.yaml`、`dist/links.txt`（每条凭证一条 vless 链接）、
-`dist/phone-import.txt`、`dist/phone-qr.png`。
+`dist/phone-import.txt`、`dist/qr-<客户端>.png`。
 
 加/删设备：
 
