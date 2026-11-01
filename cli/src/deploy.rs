@@ -74,7 +74,7 @@ pub fn run(t: &Target, o: &DeployOpts) -> Result<()> {
     let short_ids: Vec<String> = rows.iter().map(|(_, _, s)| s.clone()).collect();
     let cfg: Value = build_config(o.port, &o.sni, &dest, &keys.private, &rows, &short_ids);
 
-    let tmp = "/tmp/vpsctl-deploy.json";
+    let tmp = "/tmp/xrayctl-deploy.json";
     t.write_file(tmp, &serde_json::to_string_pretty(&cfg)?, "600", Some("root:root"))?;
     test_config(t, tmp)?;
     println!("== 配置校验通过（clients={} shortIds={}）", rows.len(), short_ids.len());
@@ -97,7 +97,7 @@ pub fn run(t: &Target, o: &DeployOpts) -> Result<()> {
     t.ok(&format!("{}install -d -m 755 /usr/local/etc/xray", t.su()))?;
     // 旧配置先留一份：启动失败要还原，不能把现场打死
     let _ = t.ok(&format!(
-        "{}[ -f {} ] && cp -p {} /tmp/vpsctl-deploy.prev || true",
+        "{}[ -f {} ] && cp -p {} /tmp/xrayctl-deploy.prev || true",
         t.su(), DEFAULT_CFG, DEFAULT_CFG
     ));
     t.ok(&format!(
@@ -118,7 +118,7 @@ pub fn run(t: &Target, o: &DeployOpts) -> Result<()> {
     if st != "active" {
         // 还原上一份配置并把服务拉回来，避免"装一半"把线上打死
         let _ = t.ok(&format!(
-            "{}if [ -f /tmp/vpsctl-deploy.prev ]; then cp -p /tmp/vpsctl-deploy.prev {} && systemctl restart xray; fi",
+            "{}if [ -f /tmp/xrayctl-deploy.prev ]; then cp -p /tmp/xrayctl-deploy.prev {} && systemctl restart xray; fi",
             t.su(), DEFAULT_CFG
         ));
         let restored = t.ok("systemctl is-active xray").unwrap_or_default();
@@ -235,7 +235,7 @@ fn deploy_from_config(t: &Target, path: &str, o: &DeployOpts) -> Result<()> {
 
     ensure_xray(t, o.xray_url.as_deref(), o.xray_version.as_deref())?;
 
-    let tmp = "/tmp/vpsctl-deploy.json";
+    let tmp = "/tmp/xrayctl-deploy.json";
     t.write_file(tmp, &serde_json::to_string_pretty(&cfg)?, "600", Some("root:root"))?;
     test_config(t, tmp)?;
     println!("== 配置校验通过");
@@ -253,7 +253,7 @@ fn deploy_from_config(t: &Target, path: &str, o: &DeployOpts) -> Result<()> {
     ))?;
     t.ok(&format!("{}install -d -m 755 /usr/local/etc/xray", t.su()))?;
     let _ = t.ok(&format!(
-        "{}[ -f {} ] && cp -p {} /tmp/vpsctl-deploy.prev || true",
+        "{}[ -f {} ] && cp -p {} /tmp/xrayctl-deploy.prev || true",
         t.su(), crate::config::DEFAULT_CFG, crate::config::DEFAULT_CFG
     ));
     t.ok(&format!(
@@ -270,7 +270,7 @@ fn deploy_from_config(t: &Target, path: &str, o: &DeployOpts) -> Result<()> {
     let st = t.ok("systemctl is-active xray").unwrap_or_default();
     if st.trim() != "active" {
         let _ = t.ok(&format!(
-            "{}if [ -f /tmp/vpsctl-deploy.prev ]; then cp -p /tmp/vpsctl-deploy.prev {} && systemctl restart xray; fi",
+            "{}if [ -f /tmp/xrayctl-deploy.prev ]; then cp -p /tmp/xrayctl-deploy.prev {} && systemctl restart xray; fi",
             t.su(), crate::config::DEFAULT_CFG
         ));
         bail!("xray 起不来（{}）。查：journalctl -u xray -n 30", st.trim());

@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# install.sh — 下载 vpsctl 并校验 sha256（不校验就不装）
+# install.sh — 下载 xrayctl 并校验 sha256（不校验就不装）
 #
 # 用法：
-#   curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash
 #   bash install.sh --version v0.1.0 --prefix ~/.local/bin
-#   bash install.sh --remote my-vps        # 直接装到服务器（本地零安装，之后 ssh my-vps vpsctl ...）
-#   bash install.sh --uninstall            # 卸掉本地的 vpsctl（二进制 + 缓存）
-#   bash install.sh --remote my-vps --uninstall   # 卸掉服务器上的（转给 vpsctl uninstall）
+#   bash install.sh --remote my-vps        # 直接装到服务器（本地零安装，之后 ssh my-vps xrayctl ...）
+#   bash install.sh --uninstall            # 卸掉本地的 xrayctl（二进制 + 缓存）
+#   bash install.sh --remote my-vps --uninstall   # 卸掉服务器上的（转给 xrayctl uninstall）
 #
 # 支持：linux x86_64/aarch64、macOS（Intel/Apple Silicon）；Windows 用 Releases 里的 .exe
 set -euo pipefail
 
-REPO="${VPSCTL_REPO:-Helioswei/vpsctl}"
-VERSION="${VPSCTL_VERSION:-latest}"
+REPO="${XRAYCTL_REPO:-Helioswei/xrayctl}"
+VERSION="${XRAYCTL_VERSION:-latest}"
 PREFIX="${PREFIX:-}"        # 不给就自动选：/usr/local/bin 可写用它，否则 ~/.local/bin（免 sudo）
-BASE="${VPSCTL_BASE:-}"   # 自建镜像/CDN 的 releases 根，如 https://cdn.example.com/vpsctl
+BASE="${XRAYCTL_BASE:-}"   # 自建镜像/CDN 的 releases 根，如 https://cdn.example.com/xrayctl
 REMOTE=""
 UNINSTALL=""
 
@@ -31,22 +31,22 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# 卸载：本地删二进制 + 缓存；远端转给 vpsctl uninstall
+# 卸载：本地删二进制 + 缓存；远端转给 xrayctl uninstall
 if [ -n "${UNINSTALL:-}" ]; then
   if [ -n "$REMOTE" ]; then
-    echo "在 $REMOTE 上卸载 vpsctl..."
-    ssh -o BatchMode=yes "$REMOTE" 'sudo /usr/local/bin/vpsctl uninstall --yes 2>/dev/null || /usr/local/bin/vpsctl uninstall --yes' || {
-      echo "远端没有 vpsctl，或需要 sudo。手动：ssh $REMOTE 'sudo vpsctl uninstall --yes'"; exit 1; }
+    echo "在 $REMOTE 上卸载 xrayctl..."
+    ssh -o BatchMode=yes "$REMOTE" 'sudo /usr/local/bin/xrayctl uninstall --yes 2>/dev/null || /usr/local/bin/xrayctl uninstall --yes' || {
+      echo "远端没有 xrayctl，或需要 sudo。手动：ssh $REMOTE 'sudo xrayctl uninstall --yes'"; exit 1; }
   fi
-  for f in "$HOME/.local/bin/vpsctl" "/usr/local/bin/vpsctl"; do
+  for f in "$HOME/.local/bin/xrayctl" "/usr/local/bin/xrayctl"; do
     if [ -f "$f" ]; then
       if [ -w "$f" ]; then rm -f "$f"; else sudo rm -f "$f"; fi
       echo "已删除 $f"
     fi
   done
-  rm -rf "$HOME/.cache/vpsctl"
-  echo "已清理缓存 ~/.cache/vpsctl"
-  echo "（xray 服务与配置不受影响；要连它一起清：vpsctl uninstall --purge --yes）"
+  rm -rf "$HOME/.cache/xrayctl"
+  echo "已清理缓存 ~/.cache/xrayctl"
+  echo "（xray 服务与配置不受影响；要连它一起清：xrayctl uninstall --purge --yes）"
   exit 0
 fi
 
@@ -65,8 +65,8 @@ case "$arch" in
 esac
 
 case "$os" in
-  linux)  asset="vpsctl-linux-${arch}" ;;
-  darwin) asset="vpsctl-darwin-${arch}" ;;
+  linux)  asset="xrayctl-linux-${arch}" ;;
+  darwin) asset="xrayctl-darwin-${arch}" ;;
   *) echo "不支持的平台：$os（Windows 请从 Releases 下载 .exe）"; exit 1 ;;
 esac
 
@@ -111,13 +111,13 @@ else
 fi
 
 if [ -n "$REMOTE" ]; then
-  scp -q "$tmp/$asset" "$REMOTE:/tmp/vpsctl.new"
-  ssh "$REMOTE" "sudo install -m 755 /tmp/vpsctl.new /usr/local/bin/vpsctl && rm -f /tmp/vpsctl.new"
-  echo "已装到 ${REMOTE}： $(ssh "$REMOTE" '/usr/local/bin/vpsctl --version')"
+  scp -q "$tmp/$asset" "$REMOTE:/tmp/xrayctl.new"
+  ssh "$REMOTE" "sudo install -m 755 /tmp/xrayctl.new /usr/local/bin/xrayctl && rm -f /tmp/xrayctl.new"
+  echo "已装到 ${REMOTE}： $(ssh "$REMOTE" '/usr/local/bin/xrayctl --version')"
   echo
   echo "之后本地零安装，直接："
-  echo "  ssh $REMOTE vpsctl status"
-  echo "  alias vps='ssh $REMOTE vpsctl'     # 想更短就加这行到 ~/.zshrc"
+  echo "  ssh $REMOTE xrayctl status"
+  echo "  alias vps='ssh $REMOTE xrayctl'     # 想更短就加这行到 ~/.zshrc"
   exit 0
 fi
 
@@ -135,20 +135,20 @@ fi
 
 mkdir -p "$PREFIX"
 if [ -w "$PREFIX" ]; then
-  install -m 755 "$tmp/$asset" "$PREFIX/vpsctl"
+  install -m 755 "$tmp/$asset" "$PREFIX/xrayctl"
 else
-  sudo install -m 755 "$tmp/$asset" "$PREFIX/vpsctl"
+  sudo install -m 755 "$tmp/$asset" "$PREFIX/xrayctl"
 fi
 
-echo "已安装： $("$PREFIX/vpsctl" --version)  →  $PREFIX/vpsctl"
+echo "已安装： $("$PREFIX/xrayctl" --version)  →  $PREFIX/xrayctl"
 if [ "${REBUILD_PATH:-0}" = "1" ]; then
   echo
-  echo "把下面这行加进 ~/.zshrc 或 ~/.bashrc 才能直接敲 vpsctl："
+  echo "把下面这行加进 ~/.zshrc 或 ~/.bashrc 才能直接敲 xrayctl："
   echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 echo
 echo "试一下："
-echo "  vpsctl --host <你的ssh别名> status"
-echo "  vpsctl --host <你的ssh别名> doctor"
+echo "  xrayctl --host <你的ssh别名> status"
+echo "  xrayctl --host <你的ssh别名> doctor"
 echo
 echo "只想装服务器、本地不装：bash install.sh --remote <ssh别名>"

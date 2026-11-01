@@ -68,7 +68,7 @@ pub fn apply(t: &Target, conf: &ServerConf) -> Result<()> {
     let backup = format!("{}.bak-{}", conf.path, stamp);
     t.ok(&format!("{}cp {} {}", t.su(), conf.path, backup))?;
 
-    let tmp = "/tmp/vpsctl-config.json";
+    let tmp = "/tmp/xrayctl-config.json";
     t.write_file(tmp, &conf.to_pretty(), "600", Some("root:root"))?;
 
     if let Err(e) = crate::config::test_config(t, tmp) {

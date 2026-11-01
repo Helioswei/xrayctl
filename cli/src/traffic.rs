@@ -10,7 +10,7 @@ use anyhow::{bail, Context, Result};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
-pub const STATE_PATH: &str = "/var/lib/vpsctl/traffic.json";
+pub const STATE_PATH: &str = "/var/lib/xrayctl/traffic.json";
 
 #[derive(Default, Clone, Copy)]
 pub struct Bytes {
@@ -216,7 +216,7 @@ fn truncate(s: &str, n: usize) -> String {
 pub fn enable_accounting(t: &Target, bin: &str) -> Result<()> {
     let bin_check = t.run(&format!("test -x {}", bin))?;
     if bin_check.code != 0 {
-        bail!("{} 不存在或不可执行（先把 linux 版 vpsctl 装上去）", bin);
+        bail!("{} 不存在或不可执行（先把 linux 版 xrayctl 装上去）", bin);
     }
     let drop_dir = "/etc/systemd/system/xray.service.d";
     t.ok(&format!("{}mkdir -p {}", t.su(), drop_dir))?;
@@ -230,28 +230,28 @@ pub fn enable_accounting(t: &Target, bin: &str) -> Result<()> {
         None,
     )?;
     t.write_file(
-        "/etc/systemd/system/vpsctl-traffic.service",
+        "/etc/systemd/system/xrayctl-traffic.service",
         &format!(
-            "[Unit]\nDescription=vpsctl 流量账本快照\nAfter=xray.service\n\n[Service]\nType=oneshot\nExecStart={} --local traffic --accumulate --quiet --state {}\n",
+            "[Unit]\nDescription=xrayctl 流量账本快照\nAfter=xray.service\n\n[Service]\nType=oneshot\nExecStart={} --local traffic --accumulate --quiet --state {}\n",
             bin, STATE_PATH
         ),
         "644",
         None,
     )?;
     t.write_file(
-        "/etc/systemd/system/vpsctl-traffic.timer",
+        "/etc/systemd/system/xrayctl-traffic.timer",
         "[Unit]\nDescription=每小时把 xray 客户端流量记进账本\n\n[Timer]\nOnCalendar=hourly\nAccuracySec=1min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n",
         "644",
         None,
     )?;
     t.ok(&format!("{}systemctl daemon-reload", t.su()))?;
     t.ok(&format!(
-        "{}systemctl enable --now vpsctl-traffic.timer",
+        "{}systemctl enable --now xrayctl-traffic.timer",
         t.su()
     ))?;
     println!("已启用账本自动保存：");
     println!("  · xray 停止/重启前（ExecStop drop-in）");
-    println!("  · 每小时一次（vpsctl-traffic.timer）");
+    println!("  · 每小时一次（xrayctl-traffic.timer）");
     println!("  状态文件：{}", STATE_PATH);
     Ok(())
 }

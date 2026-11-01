@@ -2,7 +2,7 @@
 //!
 //! 场景：海外/国内服务器需要访问 GitHub、pypi 时，装一个本地 xray 客户端连自建节点，
 //! 只监听 127.0.0.1，平时停着。注意 systemd 服务拿不到 shell 里的 export，
-//! 所以 `on` 只是起服务，环境变量由 `vpsctl proxy env` 打印、由 shell 自己 eval。
+//! 所以 `on` 只是起服务，环境变量由 `xrayctl proxy env` 打印、由 shell 自己 eval。
 
 use crate::config::{public_ip, ServerConf, DEFAULT_CFG};
 use crate::host::Target;
@@ -117,7 +117,7 @@ pub fn install(
     println!("已安装（默认关闭，不自启）");
     println!("  客户端凭证  {}", client.email);
     println!("  监听        127.0.0.1:{} (socks5) / 127.0.0.1:{} (http)", p.socks, p.http);
-    println!("\n开关： vpsctl proxy on | off | status | env");
+    println!("\n开关： xrayctl proxy on | off | status | env");
     Ok(())
 }
 
@@ -129,8 +129,8 @@ pub fn on(t: &Target, p: &Ports) -> Result<()> {
         anyhow::bail!("服务起了但连不通（journalctl -u xray-client -n 20）");
     }
     println!("代理已开启，出口 {}", ip);
-    println!("\n当前 shell 生效： eval \"$(vpsctl proxy env)\"");
-    println!("单条命令：       vpsctl proxy run <命令>（等价 PROXY 前缀）");
+    println!("\n当前 shell 生效： eval \"$(xrayctl proxy env)\"");
+    println!("单条命令：       xrayctl proxy run <命令>（等价 PROXY 前缀）");
     Ok(())
 }
 

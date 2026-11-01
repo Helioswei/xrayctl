@@ -1,6 +1,6 @@
-//! `vpsctl uninstall`：把装过的东西干净卸掉。
+//! `xrayctl uninstall`：把装过的东西干净卸掉。
 //!
-//! 默认只卸 **vpsctl 自己**（二进制 + 账本定时器 + systemd 覆盖层），
+//! 默认只卸 **xrayctl 自己**（二进制 + 账本定时器 + systemd 覆盖层），
 //! 不碰 xray —— 少一个"想卸工具结果把梯子删了"的事故面。
 //! 要连 xray 一起清，加 `--purge`，并且必须再加 `--yes` 才真的执行。
 
@@ -9,12 +9,12 @@ use anyhow::Result;
 use crate::config::{DEFAULT_CFG, API_PORT};
 use crate::host::Target;
 
-const BIN: &str = "/usr/local/bin/vpsctl";
-const STATE_DIR: &str = "/var/lib/vpsctl";
-const DROP_IN: &str = "/etc/systemd/system/xray.service.d/vpsctl.conf";
+const BIN: &str = "/usr/local/bin/xrayctl";
+const STATE_DIR: &str = "/var/lib/xrayctl";
+const DROP_IN: &str = "/etc/systemd/system/xray.service.d/xrayctl.conf";
 const TIMER_UNITS: &[&str] = &[
-    "vpsctl-traffic.timer",
-    "vpsctl-traffic.service",
+    "xrayctl-traffic.timer",
+    "xrayctl-traffic.service",
 ];
 
 pub fn run(t: &Target, purge: bool, yes: bool) -> Result<()> {
@@ -46,7 +46,7 @@ pub fn run(t: &Target, purge: bool, yes: bool) -> Result<()> {
     if purge {
         println!("   模式 purge：连 xray 服务、配置、账本、xray 用户一起删");
     } else {
-        println!("   模式 默认：只卸 vpsctl（保留 xray 与配置，梯子照常跑）");
+        println!("   模式 默认：只卸 xrayctl（保留 xray 与配置，梯子照常跑）");
     }
     for s in &steps {
         println!("   · {}", s);
@@ -67,7 +67,7 @@ pub fn run(t: &Target, purge: bool, yes: bool) -> Result<()> {
         .run(&format!("{}sh -c 'ls {} 2>/dev/null; systemctl is-active xray 2>/dev/null'", t.su(), BIN))
         .map(|o| o.stdout.trim().to_string())
         .unwrap_or_default();
-    if left.contains("vpsctl") {
+    if left.contains("xrayctl") {
         println!("!! {} 还在，检查权限", BIN);
     } else {
         println!("   {} 已移除", BIN);

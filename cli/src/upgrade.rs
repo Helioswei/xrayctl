@@ -32,7 +32,7 @@ pub fn run(t: &Target, version: Option<&str>, url: Option<&str>, latest: bool) -
         println!();
         println!("⚠️  你在升到 latest。实测 26.10.29 的服务端 REALITY 握手与 mihomo/Clash 客户端不兼容");
         println!("   （报错 REALITY authentication failed，xray 自己的客户端却正常）。");
-        println!("   升完必须用真实客户端连一次：不通就 `vpsctl rollback`。");
+        println!("   升完必须用真实客户端连一次：不通就 `xrayctl rollback`。");
         println!();
     }
 

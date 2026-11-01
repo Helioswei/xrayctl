@@ -52,27 +52,27 @@ jobs:
         include:
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
-            asset: vpsctl-linux-x86_64
+            asset: xrayctl-linux-x86_64
             apt: musl-tools
             linker: ""
           - target: aarch64-unknown-linux-musl
             os: ubuntu-latest
-            asset: vpsctl-linux-aarch64
+            asset: xrayctl-linux-aarch64
             apt: gcc-aarch64-linux-gnu musl-tools
             linker: aarch64-linux-gnu-gcc
           - target: x86_64-apple-darwin
             os: macos-latest
-            asset: vpsctl-darwin-x86_64
+            asset: xrayctl-darwin-x86_64
             apt: ""
             linker: ""
           - target: aarch64-apple-darwin
             os: macos-latest
-            asset: vpsctl-darwin-aarch64
+            asset: xrayctl-darwin-aarch64
             apt: ""
             linker: ""
           - target: x86_64-pc-windows-msvc
             os: windows-latest
-            asset: vpsctl-windows-x86_64.exe
+            asset: xrayctl-windows-x86_64.exe
             apt: ""
             linker: ""
     runs-on: ${{ matrix.os }}
@@ -102,8 +102,8 @@ jobs:
         run: |
           set -e
           case "${{ matrix.target }}" in
-            *windows*) BIN="vpsctl.exe" ;;
-            *)         BIN="vpsctl" ;;
+            *windows*) BIN="xrayctl.exe" ;;
+            *)         BIN="xrayctl" ;;
           esac
           cp "cli/target/${{ matrix.target }}/release/${BIN}" "${{ matrix.asset }}"
           ls -lh "${{ matrix.asset }}"
@@ -133,7 +133,7 @@ jobs:
         run: |
           cd dist
           rm -f SHA256SUMS
-          sha256sum vpsctl-* > SHA256SUMS
+          sha256sum xrayctl-* > SHA256SUMS
           cat SHA256SUMS
 
       - name: 上传校验文件

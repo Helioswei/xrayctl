@@ -1,20 +1,20 @@
 #!/bin/sh
-# vpsctl.sh — 单文件入口。用户只拿这一个文件，不用选平台、不用自己编。
+# xrayctl.sh — 单文件入口。用户只拿这一个文件，不用选平台、不用自己编。
 #
 # 做法：首次运行按 OS/架构取对应二进制（sha256 校验）缓存到本地，之后直接 exec。
 # 也就是说"一份文件给用户"和"原生静态二进制"可以同时成立：壳是跨平台的，肉按需取。
 #
 # 用法：
-#   ./vpsctl.sh --host my-vps status
-#   sh vpsctl.sh status                  # 在 Linux 服务器上跑（本机模式）
-#   VPSCTL_VERSION=v0.1.0 ./vpsctl.sh    # 钉版本
+#   ./xrayctl.sh --host my-vps status
+#   sh xrayctl.sh status                  # 在 Linux 服务器上跑（本机模式）
+#   XRAYCTL_VERSION=v0.1.0 ./xrayctl.sh    # 钉版本
 #
 # Windows：用 Git Bash / WSL 跑本脚本，或在服务器上直接装二进制。
 set -eu
 
-REPO="${VPSCTL_REPO:-Helioswei/vpsctl}"
-VERSION="${VPSCTL_VERSION:-latest}"
-ASSET_ROOT="${VPSCTL_BASE:-${VPSCTL_ASSET_ROOT:-}}"   # 自建镜像/CDN 根，如 https://cdn.example.com/vpsctl
+REPO="${XRAYCTL_REPO:-Helioswei/xrayctl}"
+VERSION="${XRAYCTL_VERSION:-latest}"
+ASSET_ROOT="${XRAYCTL_BASE:-${XRAYCTL_ASSET_ROOT:-}}"   # 自建镜像/CDN 根，如 https://cdn.example.com/xrayctl
 
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
 arch=$(uname -m)
@@ -24,16 +24,16 @@ case "$arch" in
   *) echo "不支持的架构：$arch" >&2; exit 1 ;;
 esac
 case "$os" in
-  linux)   asset="vpsctl-linux-${arch}" ;;
-  darwin)  asset="vpsctl-darwin-${arch}" ;;
+  linux)   asset="xrayctl-linux-${arch}" ;;
+  darwin)  asset="xrayctl-darwin-${arch}" ;;
   msys*|cygwin*|mingw*)
-    echo "Windows 上请用 Releases 里的 vpsctl-windows-x86_64.exe（PowerShell 里直接跑）" >&2
+    echo "Windows 上请用 Releases 里的 xrayctl-windows-x86_64.exe（PowerShell 里直接跑）" >&2
     exit 1 ;;
   *) echo "不支持的平台：$os" >&2; exit 1 ;;
 esac
 
-CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/vpsctl/${VERSION}"
-BIN="$CACHE/vpsctl"
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/xrayctl/${VERSION}"
+BIN="$CACHE/xrayctl"
 if [ ! -x "$BIN" ]; then
   mkdir -p "$CACHE"
   if [ -n "$ASSET_ROOT" ]; then
@@ -51,7 +51,7 @@ if [ ! -x "$BIN" ]; then
       gh release download $tag --repo "$REPO" --pattern "$asset" --output "$BIN.tmp" --clobber
       gh release download $tag --repo "$REPO" --pattern SHA256SUMS --output "$CACHE/SHA256SUMS" --clobber 2>/dev/null || true
     else
-      echo "下载失败：$base/$asset（国内可设 VPSCTL_BASE 指向镜像）" >&2
+      echo "下载失败：$base/$asset（国内可设 XRAYCTL_BASE 指向镜像）" >&2
       exit 1
     fi
   fi

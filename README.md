@@ -1,4 +1,4 @@
-# vpsctl
+# xrayctl
 
 一个给 AI agent 用的 skill：**从零把一台 VPS 变成可用的 VLESS + REALITY 节点**。
 覆盖买机器时该看什么、SSH 怎么配、脚本怎么跑、客户端怎么发、怎么加固、怎么验收。
@@ -43,12 +43,12 @@
 
 ### 手动跑
 
-**首选方式是 `vpsctl` 单二进制**（见 `cli/`，支持 Linux/macOS/Windows 当遥控器）：
+**首选方式是 `xrayctl` 单二进制**（见 `cli/`，支持 Linux/macOS/Windows 当遥控器）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash
-vpsctl deploy --dry-run --clients "laptop,phone"
-vpsctl deploy --clients "laptop,phone" && vpsctl doctor
+curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash
+xrayctl deploy --dry-run --clients "laptop,phone"
+xrayctl deploy --clients "laptop,phone" && xrayctl doctor
 ```
 
 下面是等价的脚本流程（没有二进制时用）：

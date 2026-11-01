@@ -97,7 +97,7 @@ pub fn e2e(t: &Target, conf: &ServerConf, email: &str, socks_port: u16) -> Resul
         }]
     });
 
-    let tmp = format!("/tmp/vpsctl-e2e-{}.json", socks_port);
+    let tmp = format!("/tmp/xrayctl-e2e-{}.json", socks_port);
     // 写成当前登录用户可读（临时凭证，用完即删）：否则 600 root 会让 xray/rm 都碰不了
     t.write_file(&tmp, &serde_json::to_string_pretty(&cconf)?, "600", None)?;
     t.ok(&format!("{}chown $(id -u):$(id -g) {}", t.su(), tmp))?;

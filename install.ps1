@@ -1,18 +1,18 @@
 # install.ps1 — Windows 一行安装（PowerShell）
 #
-#   irm https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.ps1 | iex
 #
-# 装到 %LOCALAPPDATA%\vpsctl\vpsctl.exe 并加进用户 PATH（不需要管理员权限）。
+# 装到 %LOCALAPPDATA%\xrayctl\xrayctl.exe 并加进用户 PATH（不需要管理员权限）。
 # 私有仓需要先 `gh auth login`，脚本会自动走 gh 取资产。
 $ErrorActionPreference = 'Stop'
 
-$repo = if ($env:VPSCTL_REPO) { $env:VPSCTL_REPO } else { 'Helioswei/vps' }
-$version = if ($env:VPSCTL_VERSION) { $env:VPSCTL_VERSION } else { 'latest' }
-$asset = 'vpsctl-windows-x86_64.exe'
+$repo = if ($env:XRAYCTL_REPO) { $env:XRAYCTL_REPO } else { 'Helioswei/vps' }
+$version = if ($env:XRAYCTL_VERSION) { $env:XRAYCTL_VERSION } else { 'latest' }
+$asset = 'xrayctl-windows-x86_64.exe'
 
-$dir = Join-Path $env:LOCALAPPDATA 'vpsctl'
+$dir = Join-Path $env:LOCALAPPDATA 'xrayctl'
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
-$out = Join-Path $dir 'vpsctl.exe'
+$out = Join-Path $dir 'xrayctl.exe'
 
 if ($version -eq 'latest') {
     $url = "https://github.com/$repo/releases/latest/download/$asset"
@@ -44,5 +44,5 @@ if ($userPath -notlike "*$dir*") {
 
 & $out --version
 Write-Host ""
-Write-Host "用法：vpsctl --host <你的ssh别名> status"
+Write-Host "用法：xrayctl --host <你的ssh别名> status"
 Write-Host "只装服务器、本地不装：bash install.sh --remote <ssh别名>（Git Bash/WSL 里跑）"

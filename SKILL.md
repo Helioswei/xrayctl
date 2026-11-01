@@ -87,26 +87,26 @@ ssh my-vps 'whoami; hostname; uname -sr; sudo -n true && echo sudo-ok'
 
 国内云默认是普通用户 + 免密 sudo，不是 root：所有安装命令加 `sudo`。
 
-## 2.5 首选：用 vpsctl 单二进制（而不是一堆脚本）
+## 2.5 首选：用 xrayctl 单二进制（而不是一堆脚本）
 
-`cli/` 里是 Rust 写的 `vpsctl`，一个静态二进制替代下面的脚本组合，跨平台（Win/macOS/Linux 都能当遥控器）。
+`cli/` 里是 Rust 写的 `xrayctl`，一个静态二进制替代下面的脚本组合，跨平台（Win/macOS/Linux 都能当遥控器）。
 
 ```bash
 # 装（从 Releases，带 sha256 校验）
-curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash
-export VPSCTL_HOST=my-vps
+curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash
+export XRAYCTL_HOST=my-vps
 
-vpsctl deploy --dry-run --clients "laptop,phone"   # 只生成+校验
-vpsctl deploy --clients "laptop,phone"             # 真装（装 xray + 生成密钥 + systemd）
-vpsctl status / doctor / selftest                  # 体检，selftest 会真的连一次
-vpsctl user add tablet --selfcheck                 # 加设备并立即验证
-vpsctl traffic / traffic --accumulate              # 按客户端用量 / 跨重启账本
-vpsctl upgrade / rollback                          # 升级与回滚
-vpsctl harden --ssh-port 22
-vpsctl proxy install --from my-vps                 # 把另一台机器变成客户端
+xrayctl deploy --dry-run --clients "laptop,phone"   # 只生成+校验
+xrayctl deploy --clients "laptop,phone"             # 真装（装 xray + 生成密钥 + systemd）
+xrayctl status / doctor / selftest                  # 体检，selftest 会真的连一次
+xrayctl user add tablet --selfcheck                 # 加设备并立即验证
+xrayctl traffic / traffic --accumulate              # 按客户端用量 / 跨重启账本
+xrayctl upgrade / rollback                          # 升级与回滚
+xrayctl harden --ssh-port 22
+xrayctl proxy install --from my-vps                 # 把另一台机器变成客户端
 ```
 
-下面 3–7 节是**同一件事的手工/脚本流程**，留作对照：vpsctl 不在手边（无网络、架构不支持）时照做即可。
+下面 3–7 节是**同一件事的手工/脚本流程**，留作对照：xrayctl 不在手边（无网络、架构不支持）时照做即可。
 两条路径产出的配置是同一份结构，可以混用。
 
 ## 3. 装 Xray REALITY
@@ -356,8 +356,8 @@ curl -x http://127.0.0.1:7897 -o /dev/null -w '%{time_total}\n' https://www.baid
 
 | 坑 | 表现 | 解法 |
 |---|---|---|
-| **服务端版本别追 latest** | 26.7.11 起 REALITY 加 `minClientVer`；26.9.9 起要求 X25519MLKEM768。mihomo 默认配置会报 `REALITY authentication failed`，而 xray 客户端正常、回环自测全绿 | 默认装兼容地板 26.6.27；要用新版就在客户端 `reality-opts` 加 `support-x25519mlkem768: true`；`vpsctl rollback` 兜底 |
-| **升级后客户端全断** | 服务端 `active`、回环自测通过，但手机/Clash 连不上（26.3.27→26.10.29 实测：mihomo 握手失败，xray 客户端正常） | 回环自测不等于兼容性测试：**升级后用真实客户端连一次**，不通就 `vpsctl rollback` |
+| **服务端版本别追 latest** | 26.7.11 起 REALITY 加 `minClientVer`；26.9.9 起要求 X25519MLKEM768。mihomo 默认配置会报 `REALITY authentication failed`，而 xray 客户端正常、回环自测全绿 | 默认装兼容地板 26.6.27；要用新版就在客户端 `reality-opts` 加 `support-x25519mlkem768: true`；`xrayctl rollback` 兜底 |
+| **升级后客户端全断** | 服务端 `active`、回环自测通过，但手机/Clash 连不上（26.3.27→26.10.29 实测：mihomo 握手失败，xray 客户端正常） | 回环自测不等于兼容性测试：**升级后用真实客户端连一次**，不通就 `xrayctl rollback` |
 | 配置属主错 | 服务 `failed` 但 `xray run -test` 通过；日志 `open config.json: permission denied` | `install -m 600 -o xray -g xray`——手改配置时最容易忘，写成 `-o root -g root` 必炸 |
 | dest 与 serverNames 不一致 | 连上但没网（走回落路径） | 两端同刻改：服务端 `dest`/`serverNames`，客户端 `servername` |
 | dest 选错 | 握手卡住 | 首选 `www.cloudflare.com:443`；apple/icloud 会被 xray 告警；microsoft 握手失败 |
@@ -384,7 +384,7 @@ mihomo/Clash 仍叫 `reality-opts.public-key`，值相同。
 | `scripts/proxy-toggle.sh` | 把本机当客户端时的 `proxy on/off/status` 开关（只绑回环，默认关闭） |
 | `references/dest-selection.md` | 伪装目标怎么挑（含候选筛选脚本用法） |
 | `references/client-configs.md` | 三种客户端配置模板：mihomo yaml / xray-core json / vless 链接 + 导入与排错 |
-| `cli/` | Rust 单二进制 `vpsctl`（部署/用户/体检/流量/升级/加固/反代客户端） |
-| `install.sh` | 从 Releases 安装 vpsctl（sha256 校验） |
+| `cli/` | Rust 单二进制 `xrayctl`（部署/用户/体检/流量/升级/加固/反代客户端） |
+| `install.sh` | 从 Releases 安装 xrayctl（sha256 校验） |
 | `.github/workflows/release.yml` | 打 tag 出全平台二进制 + SHA256SUMS |
 | `references/client-downloads.md` | 各平台客户端对照（含 v2rayNG 只有 Android）+ 国内下载办法 + 校验 |

@@ -27,15 +27,15 @@ impl Target {
         if local && cfg!(windows) {
             bail!("Windows 上不支持 --local（服务器端操作依赖 systemd，只能在 Linux 上跑）");
         }
-        // 没给 --host：如果本机就是 Linux，直接在本机执行（`ssh my-vps vpsctl status` 零参数可用）；
+        // 没给 --host：如果本机就是 Linux，直接在本机执行（`ssh my-vps xrayctl status` 零参数可用）；
         // 否则只会去读本机的 /usr/local/etc/xray，必然是错的，早点拦住并给用法。
         if host.is_none() && !local && !cfg!(target_os = "linux") {
             bail!(
                 "没指定目标。本机不是 Linux，不能在本机执行服务器端操作。\n\n\
                  两种用法（都只需要服务器上那份二进制）：\n  \
-                 1) 装到服务器，本地零安装：  ssh my-vps vpsctl status\n  \
-                 2) 本地当遥控器：            vpsctl --host my-vps status\n\n  \
-                 本地安装： curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash\n  \
+                 1) 装到服务器，本地零安装：  ssh my-vps xrayctl status\n  \
+                 2) 本地当遥控器：            xrayctl --host my-vps status\n\n  \
+                 本地安装： curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash\n  \
                  装到服务器： bash install.sh --remote my-vps"
             );
         }

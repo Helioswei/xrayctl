@@ -22,14 +22,14 @@ bantime.maxtime = 1w
 [sshd]
 enabled = true
 "#;
-    t.write_file("/tmp/vpsctl-jail.local", jail, "600", Some("root:root"))?;
+    t.write_file("/tmp/xrayctl-jail.local", jail, "600", Some("root:root"))?;
 
     let script = format!(
         r#"set -e
 {su}apt-get update -qq
 {su}DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fail2ban ufw
-{su}cp /tmp/vpsctl-jail.local /etc/fail2ban/jail.local
-{su}rm -f /tmp/vpsctl-jail.local
+{su}cp /tmp/xrayctl-jail.local /etc/fail2ban/jail.local
+{su}rm -f /tmp/xrayctl-jail.local
 {su}systemctl enable --now fail2ban
 {su}systemctl restart fail2ban
 sleep 1

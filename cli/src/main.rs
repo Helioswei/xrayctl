@@ -1,4 +1,4 @@
-//! vpsctl —— 个人自用 VPS 代理管理（Xray REALITY）
+//! xrayctl —— 个人自用 VPS 代理管理（Xray REALITY）
 //!
 //! 设计目标：一个静态二进制，管一台自己的小机器。不做面板、不做机场、不暴露后台入口。
 //!
@@ -24,15 +24,15 @@ use host::Target;
 
 #[derive(Parser)]
 #[command(
-    name = "vpsctl",
+    name = "xrayctl",
     version,
     about = "个人自用 VPS 代理管理（Xray REALITY）",
     long_about = "一个二进制管一台自己的机器：部署 / 用户 / 体检 / 流量账本 / 升级 / 加固。\n\
                   默认通过系统 ssh 连远端（复用 ~/.ssh/config 里的别名），--local 表示就在这台机器上执行。"
 )]
 struct Cli {
-    /// ssh 别名或 user@host（也可以用环境变量 VPSCTL_HOST）
-    #[arg(long, global = true, env = "VPSCTL_HOST")]
+    /// ssh 别名或 user@host（也可以用环境变量 XRAYCTL_HOST）
+    #[arg(long, global = true, env = "XRAYCTL_HOST")]
     host: Option<String>,
 
     /// 直接在本机执行（只支持 Linux，需要 systemd）
@@ -70,14 +70,14 @@ enum Cmd {
         /// 不打印表格（给 systemd 用）
         #[arg(long)]
         quiet: bool,
-        /// 账本文件（默认 /var/lib/vpsctl/traffic.json）
+        /// 账本文件（默认 /var/lib/xrayctl/traffic.json）
         #[arg(long)]
         state: Option<String>,
         /// 装自动记账：ExecStop + 每小时 timer
         #[arg(long)]
         enable_accounting: bool,
-        /// 服务器上 vpsctl 的路径
-        #[arg(long, default_value = "/usr/local/bin/vpsctl")]
+        /// 服务器上 xrayctl 的路径
+        #[arg(long, default_value = "/usr/local/bin/xrayctl")]
         bin: String,
     },
     /// 客户端（凭证）管理
@@ -122,7 +122,7 @@ enum Cmd {
         #[command(subcommand)]
         sub: ProxyCmd,
     },
-    /// 卸载：默认只卸 vpsctl 自己，--purge 才连 xray 一起清
+    /// 卸载：默认只卸 xrayctl 自己，--purge 才连 xray 一起清
     Uninstall {
         /// 连 xray 服务/配置/账本/xray 用户一起删（不可逆）
         #[arg(long)]
@@ -327,13 +327,13 @@ fn real_main() -> Result<()> {
             println!("  ≥26.9.9    要求 X25519MLKEM768：mihomo 必须写");
             println!("             reality-opts.support-x25519mlkem768: true（xray 客户端不受影响）");
             println!();
-            println!("升完用手机/Clash 真连一次；不通就 `vpsctl rollback`。");
+            println!("升完用手机/Clash 真连一次；不通就 `xrayctl rollback`。");
             Ok(())
         }
         Cmd::Keys => {
             let conf = config::ServerConf::load(&target, config::DEFAULT_CFG)?;
             let mine = conf.public_key()?;
-            println!("公钥（vpsctl 计算）  {}", mine);
+            println!("公钥（xrayctl 计算）  {}", mine);
             let theirs = target.ok(&format!(
                 "{}xray x25519 -i {} 2>/dev/null | grep -iE 'Password|Public' | awk '{{print $NF}}'",
                 target.su(),
@@ -404,5 +404,5 @@ fn real_main() -> Result<()> {
             }
         },
     }
-    .with_context(|| format!("vpsctl 执行失败（目标 {}）", target.describe()))
+    .with_context(|| format!("xrayctl 执行失败（目标 {}）", target.describe()))
 }

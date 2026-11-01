@@ -42,7 +42,7 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
     let clients = conf.clients();
     let sids = conf.short_ids();
     if clients.is_empty() {
-        bail!("服务端没有客户端，先 vpsctl user add");
+        bail!("服务端没有客户端，先 xrayctl user add");
     }
     if sids.is_empty() {
         bail!("服务端没有 shortId");
@@ -135,14 +135,14 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
     // 4) 写进 Clash Verge —— 必须显式 --apply。默认只落盘，绝不动用户正在用的配置。
     if !o.apply {
         println!("· 没有 --apply：只写了文件，Clash Verge 未改动");
-        println!("  要用它接管客户端：vpsctl client sync --apply（会先备份当前 profile）");
+        println!("  要用它接管客户端：xrayctl client sync --apply（会先备份当前 profile）");
         println!("\n== 结果");
         println!("   服务端 {}:{}  客户端 {}", ip, port, main.email);
         return Ok(());
     }
     match clash_dir(o.clash_dir.as_deref()) {
         Some(dir) => {
-            let target = current_profile(&dir).unwrap_or_else(|| dir.join(format!("vpsctl-{}.yaml", ip)));
+            let target = current_profile(&dir).unwrap_or_else(|| dir.join(format!("xrayctl-{}.yaml", ip)));
             if let Some(parent) = target.parent() {
                 std::fs::create_dir_all(parent).ok();
             }
@@ -161,7 +161,7 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
 
     println!("\n== 结果");
     println!("   服务端 {}:{}  客户端 {}  公钥 {}…", ip, port, main.email, &pubkey[..8.min(pubkey.len())]);
-    println!("   其余设备：`vpsctl --host <那台机器> proxy install --from <本机别名>`；手机扫 phone-qr.png");
+    println!("   其余设备：`xrayctl --host <那台机器> proxy install --from <本机别名>`；手机扫 phone-qr.png");
     Ok(())
 }
 

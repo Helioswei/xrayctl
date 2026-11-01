@@ -1,17 +1,17 @@
-# vpsctl
+# xrayctl
 
 一个静态二进制管一台自己的机器：部署 / 用户 / 体检 / 流量账本 / 升级 / 回滚 / 加固。
 不做面板、不做机场、不暴露后台入口。
 
 ## 只需要一个 bin：装在服务器上，本地零安装
 
-`vpsctl` 干的是「在 Linux 上操作 xray/systemd」，所以**功能上只有一份是真正必要的**：
+`xrayctl` 干的是「在 Linux 上操作 xray/systemd」，所以**功能上只有一份是真正必要的**：
 服务器上那个 Linux 版。本地（macOS/Windows）想省事就不用装：
 
 ```bash
 bash install.sh --remote my-vps   # 装到服务器，本地什么都不装
-ssh my-vps vpsctl status                     # 零参数：在服务器上就跑本机模式
-alias vps='ssh my-vps vpsctl'                # 想更短，加进 ~/.zshrc
+ssh my-vps xrayctl status                     # 零参数：在服务器上就跑本机模式
+alias vps='ssh my-vps xrayctl'                # 想更短，加进 ~/.zshrc
 ```
 
 两者是同一份代码：不带 `--host` 且本机是 Linux → 本机执行；本机不是 Linux → 直接报错并给出上面两条用法，
@@ -20,18 +20,18 @@ alias vps='ssh my-vps vpsctl'                # 想更短，加进 ~/.zshrc
 想本地装一份当遥控器也行，`install.sh` 按 `uname` 自动挑产物（你不用选平台）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash
-vpsctl --host my-vps status
+curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash
+xrayctl --host my-vps status
 ```
 
-### 只要一个文件给用户：`vpsctl.sh` 自举入口
+### 只要一个文件给用户：`xrayctl.sh` 自举入口
 
-`opensource/vpsctl.sh` 是**单个 shell 文件**，跨 macOS / Linux（Windows 走 Git Bash / WSL）。
+`opensource/xrayctl.sh` 是**单个 shell 文件**，跨 macOS / Linux（Windows 走 Git Bash / WSL）。
 首次运行按 `uname` 取对应平台的静态二进制、校验 sha256 后缓存，再 `exec` 过去——用户手里始终只有这一个文件。
 
 ```bash
-./vpsctl.sh --host my-vps status     # 首次会拉对应平台二进制，之后直接用
-VPSCTL_VERSION=v0.1.0 ./vpsctl.sh    # 钉版本
+./xrayctl.sh --host my-vps status     # 首次会拉对应平台二进制，之后直接用
+XRAYCTL_VERSION=v0.1.0 ./xrayctl.sh    # 钉版本
 ```
 
 ### 关于"一份代码到处跑"的其他方案（为什么没选）
@@ -85,17 +85,17 @@ gh 只是私有仓/内网的自用兜底，开源用户根本走不到那一步�
 
 ```bash
 # macOS / Linux，装到 ~/.local/bin（/usr/local/bin 可写才装那儿，全程不要 sudo）
-curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | sh
 
 # 只装服务器，本地零安装
 curl -fsSL .../install.sh | sh -s -- --remote my-vps
 
 # Windows
-irm https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.ps1 | iex
 
 # 自己编
 cargo build --release --manifest-path cli/Cargo.toml
-install -m 755 cli/target/release/vpsctl ~/.local/bin/vpsctl
+install -m 755 cli/target/release/xrayctl ~/.local/bin/xrayctl
 ```
 
 ### 国内网络：用 GitHub 代理，不自建 CDN
@@ -105,25 +105,25 @@ install -m 755 cli/target/release/vpsctl ~/.local/bin/vpsctl
 
 ```bash
 # 任选一个还在维护的 GitHub 代理前缀（这类服务变动频繁，用前自己验一下）
-curl -fsSL <代理前缀>/https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | sh
+curl -fsSL <代理前缀>/https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | sh
 # 或直接给安装脚本指定下载根：
-bash install.sh --base <代理前缀>/https://github.com/Helioswei/vpsctl/releases/latest/download
+bash install.sh --base <代理前缀>/https://github.com/Helioswei/xrayctl/releases/latest/download
 ```
 
-`vpsctl.sh` 认同一个环境变量：`VPSCTL_BASE=<代理前缀>/https://github.com/.../releases/latest/download`。
+`xrayctl.sh` 认同一个环境变量：`XRAYCTL_BASE=<代理前缀>/https://github.com/.../releases/latest/download`。
 
 > 说明：以前这里写过一个 `cdn.<域名>` 的例子，那只是占位，本项目**不打算自建 CDN**。
 > `install.ps1` 尚无 Windows 环境实测，首次使用时请留意输出。
 
 ## 只需要一个 bin：装在服务器上，本地零安装
 
-`vpsctl` 干的是「在 Linux 上操作 xray/systemd」，所以**功能上只有一份是真正必要的**：
+`xrayctl` 干的是「在 Linux 上操作 xray/systemd」，所以**功能上只有一份是真正必要的**：
 服务器上那个 Linux 版。本地（macOS/Windows）想省事就不用装：
 
 ```bash
 bash install.sh --remote my-vps   # 装到服务器，本地什么都不装
-ssh my-vps vpsctl status                     # 零参数：在服务器上就跑本机模式
-alias vps='ssh my-vps vpsctl'                # 想更短，加进 ~/.zshrc
+ssh my-vps xrayctl status                     # 零参数：在服务器上就跑本机模式
+alias vps='ssh my-vps xrayctl'                # 想更短，加进 ~/.zshrc
 ```
 
 两者是同一份代码：不带 `--host` 且本机是 Linux → 本机执行；本机不是 Linux → 直接报错并给出上面两条用法，
@@ -132,18 +132,18 @@ alias vps='ssh my-vps vpsctl'                # 想更短，加进 ~/.zshrc
 想本地装一份当遥控器也行，`install.sh` 按 `uname` 自动挑产物（你不用选平台）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash
-vpsctl --host my-vps status
+curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash
+xrayctl --host my-vps status
 ```
 
-### 只要一个文件给用户：`vpsctl.sh` 自举入口
+### 只要一个文件给用户：`xrayctl.sh` 自举入口
 
-`opensource/vpsctl.sh` 是**单个 shell 文件**，跨 macOS / Linux（Windows 走 Git Bash / WSL）。
+`opensource/xrayctl.sh` 是**单个 shell 文件**，跨 macOS / Linux（Windows 走 Git Bash / WSL）。
 首次运行按 `uname` 取对应平台的静态二进制、校验 sha256 后缓存，再 `exec` 过去——用户手里始终只有这一个文件。
 
 ```bash
-./vpsctl.sh --host my-vps status     # 首次会拉对应平台二进制，之后直接用
-VPSCTL_VERSION=v0.1.0 ./vpsctl.sh    # 钉版本
+./xrayctl.sh --host my-vps status     # 首次会拉对应平台二进制，之后直接用
+XRAYCTL_VERSION=v0.1.0 ./xrayctl.sh    # 钉版本
 ```
 
 ### 关于"一份代码到处跑"的其他方案（为什么没选）
@@ -186,20 +186,20 @@ opencode 是 `curl -fsSL https://opencode.ai/install | bash`，pi 是 `curl -fsS
 
 ```bash
 # macOS / Linux：装到 ~/.local/bin（/usr/local/bin 可写才装那儿，全程不要 sudo）
-curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash
 
 # 走自建镜像/CDN（国内不用翻墙，约定 <base>/<asset> 与 <base>/SHA256SUMS）
-bash install.sh --base https://cdn.example.com/vpsctl
+bash install.sh --base https://cdn.example.com/xrayctl
 
 # 只装服务器，本地零安装
 bash install.sh --remote my-vps
 
 # Windows（PowerShell）
-irm https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.ps1 | iex
 
 # 自己编
 cargo build --release --manifest-path cli/Cargo.toml
-install -m 755 cli/target/release/vpsctl ~/.local/bin/vpsctl
+install -m 755 cli/target/release/xrayctl ~/.local/bin/xrayctl
 ```
 
 > `install.ps1` 尚无 Windows 环境实测（写完没跑过），首次在 Windows 上用时注意看输出。
@@ -207,28 +207,28 @@ install -m 755 cli/target/release/vpsctl ~/.local/bin/vpsctl
 ## 用法（默认走 ssh，复用 ~/.ssh/config 的别名）
 
 ```bash
-export VPSCTL_HOST=my-vps        # 也可以每条命令加 --host my-vps
+export XRAYCTL_HOST=my-vps        # 也可以每条命令加 --host my-vps
 
-vpsctl status                    # 服务/端口/客户端/运行时长
-vpsctl doctor                    # 二进制、配置、服务、端口、端到端回环
-vpsctl selftest                  # 逐条凭证真连一次，打印出口 IP
-vpsctl traffic                   # 本次启动以来各设备用量
-vpsctl traffic --accumulate      # 跨重启累计账本
-vpsctl user list
-vpsctl user add laptop --selfcheck
-vpsctl user rm laptop
-vpsctl upgrade                   # 备份 → 校验 → 替换 → 失败回滚
-vpsctl rollback                  # 升级后客户端连不上时用这条
-vpsctl deploy --dry-run --clients "laptop,phone"
-vpsctl harden --ssh-port 22
-vpsctl proxy install --from my-vps   # 让另一台机器当客户端（凭证从节点机器读）
-vpsctl proxy on / off / status / env
+xrayctl status                    # 服务/端口/客户端/运行时长
+xrayctl doctor                    # 二进制、配置、服务、端口、端到端回环
+xrayctl selftest                  # 逐条凭证真连一次，打印出口 IP
+xrayctl traffic                   # 本次启动以来各设备用量
+xrayctl traffic --accumulate      # 跨重启累计账本
+xrayctl user list
+xrayctl user add laptop --selfcheck
+xrayctl user rm laptop
+xrayctl upgrade                   # 备份 → 校验 → 替换 → 失败回滚
+xrayctl rollback                  # 升级后客户端连不上时用这条
+xrayctl deploy --dry-run --clients "laptop,phone"
+xrayctl harden --ssh-port 22
+xrayctl proxy install --from my-vps   # 让另一台机器当客户端（凭证从节点机器读）
+xrayctl proxy on / off / status / env
 ```
 
 ## 设计要点
 
 - **凭证纯本地生成**：X25519 密钥对（`x25519-dalek`）+ UUID + shortId，不用 ssh 到服务器跑 `xray uuid`。
-  已和 `xray x25519 -i` 的输出逐字节对齐（`vpsctl keys` 会并排对照）。
+  已和 `xray x25519 -i` 的输出逐字节对齐（`xrayctl keys` 会并排对照）。
 - **所有写操作都是"备份 → 临时文件 → xray -test → install -o xray → 重启 → 检查 → 失败回滚"**。
   配置属主必须 `xray:xray`，否则服务 `permission denied`（踩过）。
 - **不引 SSH 库**：直接调系统 `ssh`，ProxyJump / agent / 多密钥全部照旧生效。
@@ -255,15 +255,15 @@ vpsctl proxy on / off / status / env
   `minClientVer` 不够，必须客户端开这个开关。
 - xray 自己的客户端两种版本都能连 → **回环自测永远发现不了这个问题**。
 
-查看现状：`vpsctl versions`。切版本：`vpsctl upgrade --version 26.10.29`，出问题 `vpsctl rollback`。
+查看现状：`xrayctl versions`。切版本：`xrayctl upgrade --version 26.10.29`，出问题 `xrayctl rollback`。
 
 ## 升级的坑（实测）
 
 `26.3.27 → 26.10.29` 服务端升级后，**Clash(mihomo) 客户端全部握手失败**，而服务端自己的
 回环自测（xray 客户端连 xray 服务端）是通过的——两边实现不一致时，回环测不出问题。
 
-所以流程是：**升级 → 用真实客户端（手机 v2rayNG / 桌面 Clash）连一次 → 不通立刻 `vpsctl rollback`**。
-`vpsctl upgrade` 不带参数时升到实测版本；`--latest` 才会升到上游最新，并会先打印警告。
+所以流程是：**升级 → 用真实客户端（手机 v2rayNG / 桌面 Clash）连一次 → 不通立刻 `xrayctl rollback`**。
+`xrayctl upgrade` 不带参数时升到实测版本；`--latest` 才会升到上游最新，并会先打印警告。
 
 ## 开发
 
@@ -278,9 +278,9 @@ linux-x86_64(musl) / linux-aarch64(musl) / darwin-x86_64 / darwin-aarch64 / wind
 ## 客户端配置：`client sync`
 
 ```bash
-vpsctl --host my-vps client sync                 # 只生成文件到 ./dist，不动你在用的配置
-vpsctl --host my-vps client sync --qr            # 顺便出手机二维码
-vpsctl --host my-vps client sync --apply         # 写入 Clash Verge 当前 profile（先自动 .bak）
+xrayctl --host my-vps client sync                 # 只生成文件到 ./dist，不动你在用的配置
+xrayctl --host my-vps client sync --qr            # 顺便出手机二维码
+xrayctl --host my-vps client sync --apply         # 写入 Clash Verge 当前 profile（先自动 .bak）
 ```
 
 产出：`clash-profile.yaml`（含 reality-opts / support-x25519mlkem768 / flow）、`links.txt`（每客户端一条）、
@@ -292,10 +292,10 @@ vpsctl --host my-vps client sync --apply         # 写入 Clash Verge 当前 pro
 
 ```bash
 bash install.sh --uninstall                    # 本地：删二进制 + 缓存
-bash install.sh --remote my-vps --uninstall    # 服务器：转给 vpsctl uninstall --yes
-vpsctl --host my-vps uninstall                 # 预演：只打印将执行的动作
-vpsctl --host my-vps uninstall --yes           # 只卸 vpsctl（保留 xray 和配置，梯子照跑）
-vpsctl --host my-vps uninstall --purge --yes   # 连 xray 服务/配置/账本/xray 用户一起删（不可逆）
+bash install.sh --remote my-vps --uninstall    # 服务器：转给 xrayctl uninstall --yes
+xrayctl --host my-vps uninstall                 # 预演：只打印将执行的动作
+xrayctl --host my-vps uninstall --yes           # 只卸 xrayctl（保留 xray 和配置，梯子照跑）
+xrayctl --host my-vps uninstall --purge --yes   # 连 xray 服务/配置/账本/xray 用户一起删（不可逆）
 ```
 
 默认**不碰 xray**：想卸工具结果把梯子删了，是这类工具最容易出的事故。

@@ -1,15 +1,15 @@
 [package]
-name = "vpsctl"
+name = "xrayctl"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
 description = "个人自用 VPS 代理管理：Xray REALITY 的部署、用户、体检、流量账本、升级"
 license = "MIT"
-repository = "https://github.com/Helioswei/vpsctl"
-default-run = "vpsctl"
+repository = "https://github.com/Helioswei/xrayctl"
+default-run = "xrayctl"
 
 [[bin]]
-name = "vpsctl"
+name = "xrayctl"
 path = "src/main.rs"
 
 [dependencies]
