@@ -95,12 +95,8 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
             sni: sni.clone(),
             flow: c.flow.clone(),
         };
-        links.push_str(&format!(
-            "{}#{}@{}\n",
-            conn.vless_link(&c.email),
-            c.email,
-            ip
-        ));
+        links.push_str(&conn.vless_link(&c.email));
+        links.push('\n');
     }
     let links_path = out.join("links.txt");
     std::fs::write(&links_path, &links)?;
