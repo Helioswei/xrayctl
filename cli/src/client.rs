@@ -25,8 +25,10 @@ pub struct SyncOpts {
     pub out_dir: String,
     /// 展示名，默认 "<地域>-REALITY"
     pub label: Option<String>,
-    /// Clash Verge 的 profiles 目录；给 "auto" 则自动探测
+    /// Clash Verge 的 profiles 目录；给 "auto" 则自动探测（只在 --apply 时用）
     pub clash_dir: Option<String>,
+    /// 真正写入 Clash Verge（默认只生成文件，不动用户在用配置）
+    pub apply: bool,
     /// 顺便生成手机二维码
     pub qr: bool,
 }
@@ -130,7 +132,14 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
         }
     }
 
-    // 4) 写进 Clash Verge：优先覆盖「当前选中的那个 profile」
+    // 4) 写进 Clash Verge —— 必须显式 --apply。默认只落盘，绝不动用户正在用的配置。
+    if !o.apply {
+        println!("· 没有 --apply：只写了文件，Clash Verge 未改动");
+        println!("  要用它接管客户端：vpsctl client sync --apply（会先备份当前 profile）");
+        println!("\n== 结果");
+        println!("   服务端 {}:{}  客户端 {}", ip, port, main.email);
+        return Ok(());
+    }
     match clash_dir(o.clash_dir.as_deref()) {
         Some(dir) => {
             let target = current_profile(&dir).unwrap_or_else(|| dir.join(format!("vpsctl-{}.yaml", ip)));

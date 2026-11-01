@@ -5,6 +5,8 @@
 #   curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash
 #   bash install.sh --version v0.1.0 --prefix ~/.local/bin
 #   bash install.sh --remote my-vps        # 直接装到服务器（本地零安装，之后 ssh my-vps vpsctl ...）
+#   bash install.sh --uninstall            # 卸掉本地的 vpsctl（二进制 + 缓存）
+#   bash install.sh --remote my-vps --uninstall   # 卸掉服务器上的（转给 vpsctl uninstall）
 #
 # 支持：linux x86_64/aarch64、macOS（Intel/Apple Silicon）；Windows 用 Releases 里的 .exe
 set -euo pipefail
@@ -14,6 +16,7 @@ VERSION="${VPSCTL_VERSION:-latest}"
 PREFIX="${PREFIX:-}"        # 不给就自动选：/usr/local/bin 可写用它，否则 ~/.local/bin（免 sudo）
 BASE="${VPSCTL_BASE:-}"   # 自建镜像/CDN 的 releases 根，如 https://cdn.example.com/vpsctl
 REMOTE=""
+UNINSTALL=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -22,10 +25,30 @@ while [ $# -gt 0 ]; do
     --base)    BASE="$2";    shift 2 ;;
     --repo)    REPO="$2";    shift 2 ;;
     --remote)  REMOTE="$2";   shift 2 ;;
+    --uninstall) UNINSTALL=1; shift ;;
     -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
     *) echo "未知参数 $1"; exit 2 ;;
   esac
 done
+
+# 卸载：本地删二进制 + 缓存；远端转给 vpsctl uninstall
+if [ -n "${UNINSTALL:-}" ]; then
+  if [ -n "$REMOTE" ]; then
+    echo "在 $REMOTE 上卸载 vpsctl..."
+    ssh -o BatchMode=yes "$REMOTE" 'sudo /usr/local/bin/vpsctl uninstall --yes 2>/dev/null || /usr/local/bin/vpsctl uninstall --yes' || {
+      echo "远端没有 vpsctl，或需要 sudo。手动：ssh $REMOTE 'sudo vpsctl uninstall --yes'"; exit 1; }
+  fi
+  for f in "$HOME/.local/bin/vpsctl" "/usr/local/bin/vpsctl"; do
+    if [ -f "$f" ]; then
+      if [ -w "$f" ]; then rm -f "$f"; else sudo rm -f "$f"; fi
+      echo "已删除 $f"
+    fi
+  done
+  rm -rf "$HOME/.cache/vpsctl"
+  echo "已清理缓存 ~/.cache/vpsctl"
+  echo "（xray 服务与配置不受影响；要连它一起清：vpsctl uninstall --purge --yes）"
+  exit 0
+fi
 
 # --remote：装到远端服务器（只能是 Linux），本地什么都不用装
 if [ -n "$REMOTE" ]; then

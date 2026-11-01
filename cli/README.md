@@ -274,3 +274,29 @@ cargo build --release
 
 发布：打 tag（`v*`）触发 `.github/workflows/release.yml`，产出
 linux-x86_64(musl) / linux-aarch64(musl) / darwin-x86_64 / darwin-aarch64 / windows-x86_64 + `SHA256SUMS`。
+
+## 客户端配置：`client sync`
+
+```bash
+vpsctl --host my-vps client sync                 # 只生成文件到 ./dist，不动你在用的配置
+vpsctl --host my-vps client sync --qr            # 顺便出手机二维码
+vpsctl --host my-vps client sync --apply         # 写入 Clash Verge 当前 profile（先自动 .bak）
+```
+
+产出：`clash-profile.yaml`（含 reality-opts / support-x25519mlkem768 / flow）、`links.txt`（每客户端一条）、
+`phone-import.txt`、`phone-qr.png`。
+
+**默认不写 Clash**——工具不该在你没盯着的时候改客户端。要接管就显式 `--apply`，且写入前先备份。
+
+## 卸载
+
+```bash
+bash install.sh --uninstall                    # 本地：删二进制 + 缓存
+bash install.sh --remote my-vps --uninstall    # 服务器：转给 vpsctl uninstall --yes
+vpsctl --host my-vps uninstall                 # 预演：只打印将执行的动作
+vpsctl --host my-vps uninstall --yes           # 只卸 vpsctl（保留 xray 和配置，梯子照跑）
+vpsctl --host my-vps uninstall --purge --yes   # 连 xray 服务/配置/账本/xray 用户一起删（不可逆）
+```
+
+默认**不碰 xray**：想卸工具结果把梯子删了，是这类工具最容易出的事故。
+

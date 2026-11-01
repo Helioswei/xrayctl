@@ -15,6 +15,7 @@ mod keys;
 mod manage;
 mod proxy;
 mod traffic;
+mod uninstall;
 mod upgrade;
 
 use anyhow::{Context, Result};
@@ -121,6 +122,15 @@ enum Cmd {
         #[command(subcommand)]
         sub: ProxyCmd,
     },
+    /// 卸载：默认只卸 vpsctl 自己，--purge 才连 xray 一起清
+    Uninstall {
+        /// 连 xray 服务/配置/账本/xray 用户一起删（不可逆）
+        #[arg(long)]
+        purge: bool,
+        /// 真的执行（不加只打印将要做的事）
+        #[arg(long)]
+        yes: bool,
+    },
     /// 客户端配置：从服务端现状渲染出 Clash / 链接 / 二维码
     Client {
         #[command(subcommand)]
@@ -147,6 +157,9 @@ enum ClientCmd {
         /// 顺便生成手机二维码
         #[arg(long)]
         qr: bool,
+        /// 真正写入 Clash Verge 当前 profile（默认不动用户配置，只生成文件）
+        #[arg(long)]
+        apply: bool,
     },
 }
 
@@ -352,14 +365,16 @@ fn real_main() -> Result<()> {
                 from_config: a.from_config,
             },
         ),
+        Cmd::Uninstall { purge, yes } => uninstall::run(&target, purge, yes),
         Cmd::Client { sub } => match sub {
-            ClientCmd::Sync { client, out, label, clash_dir, qr } => client::run(
+            ClientCmd::Sync { client, out, label, clash_dir, qr, apply } => client::run(
                 &target,
                 &client::SyncOpts {
                     client,
                     out_dir: out,
                     label,
                     clash_dir,
+                    apply,
                     qr,
                 },
             ),

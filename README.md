@@ -1,44 +1,5 @@
 # vpsctl
 
-一台 VPS、一个二进制、一套可复现的检查点。把 **VLESS + REALITY** 从买机器到客户端能用的每一步，收敛成命令。
-
-```bash
-# Linux / macOS：装到当前用户（免 sudo）
-curl -fsSL https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.sh | bash
-
-# Windows PowerShell
-irm https://raw.githubusercontent.com/Helioswei/vpsctl/main/install.ps1 | iex
-```
-
-> 不想装到本地？只装服务器，本地用 ssh 遥控：`bash install.sh --remote my-vps`，之后 `ssh my-vps vpsctl status`。
-
-## 三十秒跑通
-
-```bash
-vpsctl --host my-vps deploy --clients mac,phone      # 装 xray + 生成密钥 + 写配置 + systemd
-vpsctl --host my-vps client sync --qr                # 渲染 Clash profile + 全套链接 + 手机二维码
-vpsctl --host my-vps selftest                        # 每条凭证真连一次，回显出口 IP
-```
-
-`client sync` 会把 Clash Verge 当前 profile 直接改写（旧文件留 `.bak`），三个客户端该改的字段一个都不用手抄——
-这是本项目最想强调的一点：**凭证字段不能靠人抄**，抄错一个的症状和服务端配置错、版本不兼容长得一模一样。
-
-## 它管到哪一步
-
-```
-选机器（地域/规格/流量/促销陷阱）
-  → SSH（公钥/别名/主机密钥变更）
-  → 装 Xray REALITY（版本钉住 → 生成密钥 → 渲染 → 校验 → 自测 → systemd）
-  → 放行端口（云控制台安全组 + 主机 ufw，两套）
-  → 客户端（每设备独立 uuid + shortId；Clash profile / vless 链接 / 二维码）
-  → 加固（fail2ban + ufw，不动 SSH 登录方式）
-  → 验收（回环自测、端口可达、出口 IP、流量账本）
-```
-
-下单付款不在范围内：读价、算成本、给选项可以，确认购买交回人。
-
----
-
 一个给 AI agent 用的 skill：**从零把一台 VPS 变成可用的 VLESS + REALITY 节点**。
 覆盖买机器时该看什么、SSH 怎么配、脚本怎么跑、客户端怎么发、怎么加固、怎么验收。
 
