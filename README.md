@@ -26,8 +26,8 @@ irm https://gh-proxy.com/https://raw.githubusercontent.com/Helioswei/xrayctl/mai
 连 install.sh 都取不到时，clone 下来本地跑：
 
 ```bash
-git clone https://github.com/Helioswei/xrayctl.git && bash xrayctl/cli/../install.sh
-# 或者在仓库目录里直接： bash install.sh
+git clone https://github.com/Helioswei/xrayctl.git
+cd xrayctl && bash install.sh
 ```
 
 **English**: [README.en.md](README.en.md)
