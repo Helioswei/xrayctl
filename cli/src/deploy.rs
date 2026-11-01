@@ -291,12 +291,12 @@ fn deploy_from_config(t: &Target, path: &str, o: &DeployOpts) -> Result<()> {
     let sg = crate::fwrules::generate(&crate::fwrules::RuleOpts {
         provider: "tencent".into(),
         port,
-        ssh_port: Some(22),
+        ssh_port: None,
         ipv6: false,
         out_dir: "dist".into(),
     });
     if let Ok(p) = sg {
-        crate::fwrules::explain(&p, Some(22));
+        crate::fwrules::explain(&p, None);
     }
     Ok(())
 }

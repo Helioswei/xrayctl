@@ -72,7 +72,7 @@ pub fn explain(path: &Path, ssh_port: Option<u16>) {
     if ssh_port.is_some() {
         println!("        ——所以这个文件里已经带上了 SSH 端口，覆盖导入也不会把自己锁在外面");
     } else {
-        println!("        ——覆盖导入前先确认文件里有你的 SSH 端口，否则会把自己锁在外面");
+        println!("        ——默认只写代理端口；如果你要「覆盖导入」，先加 --ssh-port 22 把登录入口带上，否则会把自己锁在外面");
     }
     println!("   验完  本机执行： nc -z -G 5 -w 5 <公网IP> 443（macOS 的 nc 要 -G，Linux 用 -w 5）");
 }
