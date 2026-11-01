@@ -98,7 +98,7 @@ xrayctl [--host <ssh别名> | --local] [--no-sudo] <子命令>
 | 26.10.x | ❌ `REALITY authentication failed` | ✅ | ✅ |
 
 断点在 26.7.11（`minClientVer`）与 26.9.9（强制 X25519MLKEM768）。`client sync` 生成的配置自带
-这个 flag；手写配置的人漏掉这一行就会踩坑，而且报错看着像服务端坏了。`xrayctl versions` 直接打印这张表。
+这个 flag；`xrayctl versions` 直接打印这张表。
 
 ```bash
 xrayctl --host my-vps upgrade --version 26.6.27   # 钉到某个版本（对老客户端最保险）
