@@ -15,7 +15,7 @@ use serde_json::Value;
 ///   ≥26.9.9    要求 X25519MLKEM768 后量子密钥交换 —— mihomo 必须在 reality-opts 里写
 ///               support-x25519mlkem768: true，否则连不上（xray 客户端不受影响）
 /// 想用新版本：升客户端 + `--xray-version 26.10.29`，升完用真机连一次。
-pub const TESTED_XRAY_VERSION: &str = "26.6.27";
+pub const TESTED_XRAY_VERSION: &str = "26.10.31";
 
 const UNIT: &str = r#"[Unit]
 Description=Xray Service
