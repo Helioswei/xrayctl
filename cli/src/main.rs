@@ -124,9 +124,9 @@ enum Cmd {
     },
     /// 卸载：默认整体卸载（含 xray / 配置 / 账本 / 用户），--keep-xray 只卸工具
     Uninstall {
-        /// 连 xray 服务/配置/账本/xray 用户一起删（不可逆）
-        #[arg(long)]
-        purge: bool,
+        /// 只卸工具，保留 xray 服务与配置（梯子继续跑）
+        #[arg(long = "keep-xray")]
+        keep_xray: bool,
         /// 真的执行（不加只打印将要做的事）
         #[arg(long)]
         yes: bool,
@@ -365,7 +365,7 @@ fn real_main() -> Result<()> {
                 from_config: a.from_config,
             },
         ),
-        Cmd::Uninstall { purge, yes } => uninstall::run(&target, purge, yes),
+        Cmd::Uninstall { keep_xray, yes } => uninstall::run(&target, keep_xray, yes),
         Cmd::Client { sub } => match sub {
             ClientCmd::Sync { client, out, label, clash_dir, qr, apply } => client::run(
                 &target,
