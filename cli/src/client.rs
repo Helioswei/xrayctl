@@ -150,7 +150,7 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
             std::fs::copy(&clash_path, &target)
                 .with_context(|| format!("写不进 {}", target.display()))?;
             println!("✓ 已写入 Clash Verge：{}", target.display());
-            println!("   Verge 里点一下当前配置「刷新/重载」即生效（旧文件已留 .bak）");
+            println!("   重启 Clash Verge 后生效（完全退出再打开；旧文件已留 .bak）");
         }
         None => println!("· 没找到 Clash Verge 目录，只写了仓库里那份（用 --clash-dir 指定）"),
     }
