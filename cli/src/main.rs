@@ -22,10 +22,16 @@ use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
 use host::Target;
 
+/// 发版时由 CI 传 `XRAYCTL_BUILD_VERSION=<tag>`，本地编译则用 Cargo 里的版本
+pub const VERSION: &str = match option_env!("XRAYCTL_BUILD_VERSION") {
+    Some(v) => v,
+    None => env!("CARGO_PKG_VERSION"),
+};
+
 #[derive(Parser)]
 #[command(
     name = "xrayctl",
-    version,
+    version = VERSION,
     about = "个人自用 VPS 代理管理（Xray REALITY）",
     long_about = "一个二进制管一台自己的机器：部署 / 用户 / 体检 / 流量账本 / 升级 / 加固。\n\
                   默认通过系统 ssh 连远端（复用 ~/.ssh/config 里的别名），--local 表示就在这台机器上执行。"

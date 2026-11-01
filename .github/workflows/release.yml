@@ -94,6 +94,7 @@ jobs:
 
       - name: 编译
         env:
+          XRAYCTL_BUILD_VERSION: ${{ github.ref_name }}
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: ${{ matrix.linker }}
         run: cargo build --release --manifest-path cli/Cargo.toml --target ${{ matrix.target }}
 
