@@ -29,8 +29,10 @@ pub struct SyncOpts {
     pub clash_dir: Option<String>,
     /// 真正写入 Clash Verge（默认只生成文件，不动用户在用配置）
     pub apply: bool,
-    /// 顺便生成手机二维码
+    /// 生成二维码（默认只给 phone 这条）
     pub qr: bool,
+    /// 每条凭证都出二维码（默认只有手机）
+    pub qr_all: bool,
 }
 
 pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
@@ -104,7 +106,9 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
             phone_link = Some(link.clone());
         }
 
-        if o.qr {
+        // 默认只给手机出二维码：其它设备是电脑，装的是配置文件，不需要扫码
+        let want_qr = if o.qr_all { o.qr } else { o.qr && is_mobile(&c.email) };
+        if want_qr {
             let png = out.join(format!("qr-{}.png", safe_name(&c.email)));
             match make_qr(&link, &png) {
                 Ok(_) => println!("✓ {}", png.display()),
@@ -326,6 +330,14 @@ fn now_stamp() -> String {
         .map(|d| d.as_secs())
         .unwrap_or(0);
     format!("{}", secs)
+}
+
+/// 这台设备是不是手机（决定要不要出二维码）：名字里带这些词就算
+fn is_mobile(email: &str) -> bool {
+    let e = email.to_ascii_lowercase();
+    ["phone", "iphone", "android", "mobile", "ipad", "pad", "手机", "平板"]
+        .iter()
+        .any(|k| e.contains(k))
 }
 
 /// 邮箱 → 文件名：只保留安全字符

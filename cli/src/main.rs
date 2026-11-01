@@ -179,9 +179,12 @@ enum ClientCmd {
         /// Clash Verge 的 profiles 目录；auto = 自动探测 macOS 默认路径
         #[arg(long)]
         clash_dir: Option<String>,
-        /// 不生成二维码（默认每条凭证都出一张 qr-<客户端>.png）
+        /// 不生成二维码（默认只给 phone 这条出一张 qr-phone.png）
         #[arg(long = "no-qr")]
         no_qr: bool,
+        /// 每条凭证都出二维码（默认只有手机）
+        #[arg(long = "qr-all")]
+        qr_all: bool,
         /// 真正写入 Clash Verge 当前 profile（默认不动用户配置，只生成文件）
         #[arg(long)]
         apply: bool,
@@ -407,7 +410,7 @@ fn real_main() -> Result<()> {
         ),
         Cmd::Uninstall { keep_xray, yes } => uninstall::run(&target, keep_xray, yes),
         Cmd::Client { sub } => match sub {
-            ClientCmd::Sync { client, out, label, clash_dir, no_qr, apply } => client::run(
+            ClientCmd::Sync { client, out, label, clash_dir, no_qr, qr_all, apply } => client::run(
                 &target,
                 &client::SyncOpts {
                     client,
@@ -416,6 +419,7 @@ fn real_main() -> Result<()> {
                     clash_dir,
                     apply,
                     qr: !no_qr,
+                    qr_all,
                 },
             ),
         },

@@ -42,7 +42,8 @@ xrayctl --host my-vps client sync                # 渲染 Clash 配置 + 全部�
 xrayctl --host my-vps selftest                        # 每条凭证真连一次，回显出口 IP
 ```
 
-`client sync` 默认只写文件（`./dist`），加 `--apply` 才会接管 Clash Verge 的当前 profile（先备份）。
+`client sync` 默认只写文件（`./dist`）：手机那条出二维码 + 单独链接文件，其它设备只进 `links.txt`。
+加 `--apply` 才会接管 Clash Verge 的当前 profile（先备份），`--qr-all` 让每台设备都出二维码。
 
 **为什么不让用户自己填客户端字段**：REALITY 的那几个字段抄错任何一个，报错都是同一句
 `REALITY authentication failed`，和服务端配置错、版本不兼容长得一模一样。这个项目里所有
