@@ -286,5 +286,17 @@ fn deploy_from_config(t: &Target, path: &str, o: &DeployOpts) -> Result<()> {
     let ip = crate::config::public_ip(t).unwrap_or_else(|_| "{公网IP}".into());
     println!("\n== 部署完成，公网 IP {}", ip);
     println!("   客户端只需把 server 地址改成 {}", ip);
+
+    // 云安全组是第二道墙：顺手把导入文件写出来，省得去控制台手敲
+    let sg = crate::fwrules::generate(&crate::fwrules::RuleOpts {
+        provider: "tencent".into(),
+        port,
+        ssh_port: Some(22),
+        ipv6: false,
+        out_dir: "dist".into(),
+    });
+    if let Ok(p) = sg {
+        crate::fwrules::explain(&p, Some(22));
+    }
     Ok(())
 }

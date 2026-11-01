@@ -67,6 +67,7 @@ xrayctl [--host <ssh别名> | --local] [--no-sudo] <子命令>
 | `checkupgrade` / `versions` | 看有没有新版；打印服务端版本与客户端兼容阶梯 |
 | `keys` | 显示公钥，并与 xray 自己算的对照 |
 | `harden` | fail2ban + ufw（不动 SSH 登录方式） |
+| `firewall` | 生成云安全组导入文件（腾讯云 CSV），443 那条不用手敲 |
 | `proxy install / on / off` | 把这台服务器本身当客户端（默认关，用时才开） |
 | `uninstall` | 默认整体卸载（工具 + xray + 配置 + 账本 + 用户）；`--keep-xray` 只卸工具 |
 
@@ -87,7 +88,7 @@ xrayctl [--host <ssh别名> | --local] [--no-sudo] <子命令>
 选机器（地域/规格/流量/促销陷阱）
   → 配 SSH（公钥/别名/主机密钥变更的处理）
   → 部署（装 xray → 生成密钥 → 渲染 → 校验 → 自测 → systemd）
-  → 放行端口（云控制台安全组是另一道墙，工具管不到）
+  → 放行端口（云控制台安全组是另一道墙：`xrayctl firewall` 出导入文件，导入仍需人点）
   → 发客户端（每设备独立 uuid + shortId；Clash / vless 链接 / 二维码）
   → 加固（fail2ban + ufw，不动 SSH 登录方式）
   → 验收（回环自测、端口可达、出口 IP、按客户端流量）

@@ -9,6 +9,7 @@ mod checks;
 mod client;
 mod config;
 mod deploy;
+mod fwrules;
 mod harden;
 mod host;
 mod keys;
@@ -110,6 +111,24 @@ enum Cmd {
         /// 指定备份文件（默认取最新的 xray.bak-*）
         #[arg(long)]
         file: Option<String>,
+    },
+    /// 生成云安全组导入文件（443 那条规则不用手敲）
+    Firewall {
+        /// 云厂商（目前内置 tencent）
+        #[arg(long, default_value = "tencent")]
+        provider: String,
+        /// 代理端口
+        #[arg(long, default_value_t = 443)]
+        port: u16,
+        /// 顺带写入 SSH 端口（覆盖导入时不会把自己锁外面）
+        #[arg(long)]
+        ssh_port: Option<u16>,
+        /// 同时加 IPv6 规则
+        #[arg(long)]
+        ipv6: bool,
+        /// 输出目录
+        #[arg(long, default_value = "dist")]
+        out: String,
     },
     /// 版本与客户端兼容性一览
     Versions,
@@ -255,9 +274,24 @@ fn main() {
 
 fn real_main() -> Result<()> {
     let cli = Cli::parse();
+
+    // 纯本地命令：跟服务器无关，不该要求 --host
+    if let Cmd::Firewall { provider, port, ssh_port, ipv6, out } = &cli.cmd {
+        let p = fwrules::generate(&fwrules::RuleOpts {
+            provider: provider.clone(),
+            port: *port,
+            ssh_port: *ssh_port,
+            ipv6: *ipv6,
+            out_dir: out.clone(),
+        })?;
+        fwrules::explain(&p, *ssh_port);
+        return Ok(());
+    }
+
     let target = Target::new(cli.host.clone(), cli.local, !cli.no_sudo)?;
 
     match cli.cmd {
+        Cmd::Firewall { .. } => unreachable!("firewall 已在前面处理"),
         Cmd::Status => checks::cmd_status(&target),
         Cmd::Doctor => checks::cmd_doctor(&target),
         Cmd::Selftest { email } => checks::cmd_selftest(&target, email.as_deref()),
