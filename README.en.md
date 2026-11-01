@@ -42,4 +42,4 @@ Buying the VPS is out of scope: read prices and options, then hand the purchase 
 - Default Xray version is pinned to a **verified** release, not `latest`; `--xray-version` overrides.
 - Clients need `support-x25519mlkem768: true` on recent Xray servers — `client sync` emits it.
 - Uninstall removes everything by default (`xrayctl uninstall --yes`); `--keep-xray` keeps the tunnel alive.
-- Full docs (Chinese): [README.md](README.md), agent workflow: [SKILL.md](SKILL.md)
+- Full docs (Chinese): [README.md](README.md) · agent workflow: [SKILL.md](SKILL.md) · client notes: [references/](references/)

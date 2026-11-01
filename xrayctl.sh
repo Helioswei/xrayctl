@@ -7,7 +7,7 @@
 # 用法：
 #   ./xrayctl.sh --host my-vps status
 #   sh xrayctl.sh status                  # 在 Linux 服务器上跑（本机模式）
-#   XRAYCTL_VERSION=v0.1.0 ./xrayctl.sh    # 钉版本
+#   XRAYCTL_VERSION=vX.Y.Z ./xrayctl.sh    # 钉版本
 #
 # Windows：用 Git Bash / WSL 跑本脚本，或在服务器上直接装二进制。
 set -eu

@@ -3,7 +3,7 @@
 #
 # 用法：
 #   curl -fsSL https://raw.githubusercontent.com/Helioswei/xrayctl/main/install.sh | bash
-#   bash install.sh --version v0.1.0 --prefix ~/.local/bin
+#   bash install.sh --version vX.Y.Z --prefix ~/.local/bin
 #   bash install.sh --remote my-vps        # 直接装到服务器（本地零安装，之后 ssh my-vps xrayctl ...）
 #   bash install.sh --uninstall            # 卸掉本地的 xrayctl（二进制 + 缓存）
 #   bash install.sh --remote my-vps --uninstall   # 卸掉服务器上的（转给 xrayctl uninstall）

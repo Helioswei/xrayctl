@@ -103,17 +103,16 @@ curl -x socks5h://127.0.0.1:1080 https://ipinfo.io/ip   # 出口应是 VPS IP
 > **25+ 版本字段改名**：客户端写 `publicKey` 会被接受，但官方输出的键名已是 `password`；
 > 两者同义。mihomo 里仍叫 `reality-opts.public-key`，vless 链接里叫 `pbk`。
 
-要"平时关、用时开"，用 `scripts/proxy-toggle.sh` 包成 systemd 服务 + `proxy on/off`。
+要"平时关、用时开"：`xrayctl --host my-vps proxy install` 装好后用 `proxy on` / `proxy off` 切换（默认关）。
 
 ## 三、vless 链接 / 二维码（手机）
 
 一行搞定，用自己的配置生成（不要在别处抄）：
 
 ```bash
-# 在服务端跑：读取 config.json，反推公钥，为每个 client 打印链接
-bash scripts/make_vless_share_link.sh /usr/local/etc/xray/config.json 443
-
-# 二维码（可选，需 qrencode；Python 亦可：pip install segno）
+# 一条命令生成全部链接 + 手机链接 + 二维码（读取服务端配置，公钥自动反推）
+xrayctl --host my-vps client sync --qr
+# 产物：dist/links.txt · dist/phone-import.txt · dist/phone-qr.png
 ```
 
 链接里的字段含义（手填时最容易错的四项）：
@@ -137,9 +136,7 @@ vless://<UUID>@<IP>:443
 ## 每台设备一条独立 client
 
 ```bash
-./scripts/add_client.sh --host my-vps --email tablet --dry-run   # 先校验，不改线上
-./scripts/add_client.sh --host my-vps --email tablet             # 真加（重启 xray，瞬断 1–2 秒）
-./scripts/add_client.sh --host my-vps --email tablet --selfcheck # 体检这条凭证
+xrayctl --host my-vps user add tablet --selfcheck   # 加完立刻回环真连一次
 ```
 
 好处：某台设备泄露/不用了，删掉那一条即可，其他人不受影响；也便于按 `email` 看流量。

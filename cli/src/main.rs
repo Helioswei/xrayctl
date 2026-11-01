@@ -122,7 +122,7 @@ enum Cmd {
         #[command(subcommand)]
         sub: ProxyCmd,
     },
-    /// 卸载：默认只卸 xrayctl 自己，--purge 才连 xray 一起清
+    /// 卸载：默认整体卸载（含 xray / 配置 / 账本 / 用户），--keep-xray 只卸工具
     Uninstall {
         /// 连 xray 服务/配置/账本/xray 用户一起删（不可逆）
         #[arg(long)]
@@ -140,7 +140,7 @@ enum Cmd {
 
 #[derive(Subcommand)]
 enum ClientCmd {
-    /// 读服务端配置，生成 Clash profile + 全部链接 + 手机二维码，并同步到 Clash Verge
+    /// 读服务端配置，生成 Clash profile + 全部链接 + 手机二维码（--apply 才写入 Clash Verge）
     Sync {
         /// 用哪个客户端生成主 profile（默认取 mac，没有就取第一个）
         #[arg(long)]
@@ -181,7 +181,7 @@ struct DeployArgs {
     /// 自己给 xray 下载地址（镜像/离线）
     #[arg(long)]
     xray_url: Option<String>,
-    /// 指定 xray 版本（默认装实测可用版本，见 cli/README 兼容表）
+    /// 指定 xray 版本（默认装实测可用版本，见 README 兼容表）
     #[arg(long)]
     xray_version: Option<String>,
     /// 用本地现成 config.json 部署（换机复用旧凭证，客户端不用重新导入）
