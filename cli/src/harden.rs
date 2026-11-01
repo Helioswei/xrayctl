@@ -41,7 +41,7 @@ sleep 1
 echo "--- 结果 ---"
 echo "fail2ban: $(systemctl is-active fail2ban)"
 {su}fail2ban-client status sshd | sed -n '2,6p'
-{su}ufw status | head -6"#,
+{su}ufw status | head -14"#,
         su = t.su(),
         ssh = ssh_port,
         port = port,
