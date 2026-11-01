@@ -125,6 +125,8 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
                 Ok(_) => println!("✓ {}", png.display()),
                 Err(e) => println!("· 二维码跳过：{}", e),
             }
+        } else {
+            println!("· 要手机二维码：加 --qr（xrayctl client sync --qr）");
         }
     }
 
