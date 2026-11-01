@@ -185,6 +185,9 @@ enum ClientCmd {
         /// 每条凭证都出二维码（默认只有手机）
         #[arg(long = "qr-all")]
         qr_all: bool,
+        /// 展示名前缀（如 首尔 → 首尔-phone），不写则按服务器城市自动识别，给空串 "" 表示不加
+        #[arg(long)]
+        prefix: Option<String>,
         /// 真正写入 Clash Verge 当前 profile（默认不动用户配置，只生成文件）
         #[arg(long)]
         apply: bool,
@@ -410,7 +413,7 @@ fn real_main() -> Result<()> {
         ),
         Cmd::Uninstall { keep_xray, yes } => uninstall::run(&target, keep_xray, yes),
         Cmd::Client { sub } => match sub {
-            ClientCmd::Sync { client, out, label, clash_dir, no_qr, qr_all, apply } => client::run(
+            ClientCmd::Sync { client, out, label, clash_dir, no_qr, qr_all, prefix, apply } => client::run(
                 &target,
                 &client::SyncOpts {
                     client,
@@ -420,6 +423,7 @@ fn real_main() -> Result<()> {
                     apply,
                     qr: !no_qr,
                     qr_all,
+                    prefix,
                 },
             ),
         },

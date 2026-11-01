@@ -196,9 +196,21 @@ impl Conn {
             pbk = self.public_key,
             sid = self.short_id,
             flow = self.flow,
-            label = label
+            label = pct_encode(label)
         )
     }
+}
+
+/// vless 链接的 #fragment 要按 URI 规范编码：中文直接写进去，有的客户端会读成乱码
+fn pct_encode(s: &str) -> String {
+    let mut out = String::new();
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => out.push(b as char),
+            _ => out.push_str(&format!("%{:02X}", b)),
+        }
+    }
+    out
 }
 
 /// 读服务端自己的公网 IP
@@ -277,4 +289,15 @@ pub fn test_config(t: &Target, path: &str) -> Result<String> {
         bail!("配置校验失败：\n{}", combined.trim());
     }
     Ok("Configuration OK".to_string())
+}
+
+#[cfg(test)]
+mod pct_tests {
+    use super::pct_encode;
+
+    #[test]
+    fn label_is_uri_encoded() {
+        assert_eq!(pct_encode("phone"), "phone");
+        assert_eq!(pct_encode("首尔-phone"), "%E9%A6%96%E5%B0%94-phone");
+    }
 }

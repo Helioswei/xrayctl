@@ -33,6 +33,8 @@ pub struct SyncOpts {
     pub qr: bool,
     /// 每条凭证都出二维码（默认只有手机）
     pub qr_all: bool,
+    /// 展示名前缀，例如「首尔」→ 手机里显示 首尔-phone；None = 自动按服务器城市识别，空串 = 不加
+    pub prefix: Option<String>,
 }
 
 pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
@@ -50,7 +52,23 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
         bail!("服务端没有 shortId");
     }
 
-    let label_root = o.label.clone().unwrap_or_else(|| "VPS-REALITY".to_string());
+    // 展示名带上地域，否则手机上两台机器都叫 phone，分不清
+    let region: Option<String> = match &o.prefix {
+        Some(p) if p.trim().is_empty() => None,
+        Some(p) => Some(p.trim().to_string()),
+        None => detect_region(t),
+    };
+    let disp = |email: &str| match &region {
+        Some(r) => format!("{}-{}", r, email),
+        None => email.to_string(),
+    };
+    let label_root = o
+        .label
+        .clone()
+        .unwrap_or_else(|| match &region {
+            Some(r) => format!("{}-REALITY", r),
+            None => "VPS-REALITY".to_string(),
+        });
 
     // 主 profile 用哪个客户端：指定 > mac > 第一个
     let main = match &o.client {
@@ -98,7 +116,7 @@ pub fn run(t: &Target, o: &SyncOpts) -> Result<()> {
             sni: sni.clone(),
             flow: c.flow.clone(),
         };
-        let link = conn.vless_link(&c.email);
+        let link = conn.vless_link(&disp(&c.email));
         links.push_str(&link);
         links.push('\n');
 
@@ -330,6 +348,40 @@ fn now_stamp() -> String {
         .map(|d| d.as_secs())
         .unwrap_or(0);
     format!("{}", secs)
+}
+
+/// 服务器在哪个城市（用于给客户端展示名带上地域，手机上才分得清东京/首尔）
+/// 拿不到就返回 None，不编造。
+fn detect_region(t: &Target) -> Option<String> {
+    let raw = t
+        .run("curl -4 -s --max-time 5 https://ipinfo.io/city || curl -4 -s --max-time 5 'http://ip-api.com/line/?fields=city'")
+        .ok()?;
+    let city = raw.stdout.trim();
+    if city.is_empty() || city.contains(' ') && city.len() > 24 {
+        return None;
+    }
+    Some(cn_city(city))
+}
+
+/// 常见的机房城市译名；其它原样返回
+fn cn_city(s: &str) -> String {
+    match s.trim() {
+        "Seoul" => "首尔".into(),
+        "Tokyo" => "东京".into(),
+        "Osaka" => "大阪".into(),
+        "Singapore" => "新加坡".into(),
+        "Hong Kong" | "Hong Kong Island" => "香港".into(),
+        "Taipei" => "台北".into(),
+        "Los Angeles" => "洛杉矶".into(),
+        "San Jose" | "Santa Clara" => "硅谷".into(),
+        "Silicon Valley" => "硅谷".into(),
+        "Frankfurt" => "法兰克福".into(),
+        "Amsterdam" => "阿姆斯特丹".into(),
+        "London" => "伦敦".into(),
+        "Paris" => "巴黎".into(),
+        "Sydney" => "悉尼".into(),
+        other => other.to_string(),
+    }
 }
 
 /// 这台设备是不是手机（决定要不要出二维码）：名字里带这些词就算

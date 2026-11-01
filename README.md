@@ -43,6 +43,7 @@ xrayctl --host my-vps selftest                        # 每条凭证真连一次
 ```
 
 `client sync` 默认只写文件（`./dist`）：手机那条出二维码 + 单独链接文件，其它设备只进 `links.txt`。
+客户端展示名会自动带上服务器城市（首尔-mac / 首尔-phone），多台机器不会都叫 phone；`--prefix 东京` 可手动改，`--prefix ""` 关掉。
 加 `--apply` 才会接管 Clash Verge 的当前 profile（先备份），`--qr-all` 让每台设备都出二维码。
 
 **为什么不让用户自己填客户端字段**：REALITY 的那几个字段抄错任何一个，报错都是同一句
@@ -76,8 +77,9 @@ xrayctl [--host <ssh别名> | --local] [--no-sudo] <子命令>
 
 | 平台 | 状态 |
 |---|---|
-| Linux x86_64 / aarch64 | ✅ 真机验证（Ubuntu 24.04 / 26.04） |
-| macOS arm64 | ✅ 真机验证（当远端遥控器） |
+| Linux x86_64 | ✅ 真机验证（Ubuntu 26.04 全新机器，部署 → 客户端 → 账本全流程） |
+| Linux aarch64 | ⚠️ 交叉编译通过，未真机运行 |
+| macOS arm64 | ✅ 真机验证（当远端遥控器，含 `client sync --apply`） |
 | macOS x86_64 | ⚠️ 构建通过，未在真机运行验证 |
 | Windows x86_64 | ⚠️ 构建通过，`install.ps1` 未在真机验证；遇到问题请开 issue |
 
